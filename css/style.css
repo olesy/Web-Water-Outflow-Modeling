@@ -1,0 +1,299 @@
+/*
+* Custom styles file
+*/
+
+body {
+    font-family: "Nunito", sans-serif;
+    overflow-x: hidden;
+}
+
+.small-shadow {
+    box-shadow: 0px 3px 5px rgba(38, 0, 111, 0.4);
+}
+
+.custom-paper {
+    box-shadow: 0px 3px 5px rgb(224, 224, 224);
+    border-radius: 20px;
+    -webkit-animation: appear 0.6s;
+    animation: appear 0.6s;
+}
+
+.queue-active {
+    box-shadow: 0px 2px 8px rgba(38, 0, 111, 0.4) !important;
+}
+
+.important-icon {
+    fill: red;
+    color: red;
+}
+
+.custom-block {
+    box-shadow: 0px 3px 5px rgb(224, 224, 224);
+    border-radius: 20px;
+    -webkit-animation: appear 0.6s;
+    animation: appear 0.6s;
+}
+
+.custom-nav {
+    box-shadow: 0px 0px 10px rgba(38, 0, 111, 0.35);
+    background-color: rgb(255, 255, 255);
+    padding-top: 5px;
+    padding-bottom: 5px;
+    min-height: 55px;
+}
+
+
+.table {
+    font-family: "Nunito";
+}
+
+.custom-logoname {
+    color: rgb(38, 0, 111)
+}
+
+.custom-card {
+    background-color: #f7f7f7;
+    border-radius: 15px;
+}
+
+.custom-textform {
+    border-radius: 20px;
+    transition: all 0.2s ease-out;
+}
+
+.custom-textform:focus {
+    transform: scale(1.03);
+}
+
+.custom-badge {
+    border-radius: 20px;
+    padding: 6px !important;
+}
+
+.bg-light {
+    background-color: rgb(252, 252, 252) !important;
+}
+
+.custom-btn {
+    border-radius: 20px;
+    border: 0;
+    min-width: 100px;
+    padding-left: 10px;
+    padding-right: 10px;
+    transition: 0.2s ease-out;
+}
+
+.icon-btn {
+    padding: 3px;
+    min-width: 30px;
+    background-color: #97979700;
+}
+
+.big-icon {
+    padding: 2px;
+}
+
+.custom-btn:active {
+    transform: scale(0.95);
+}
+
+.custom-toggler {
+    transition: 0.1s ease-in-out;
+    border: 0;
+}
+
+.custom-toggler:active {
+    transform: scale(1.1);
+}
+
+.custom-select {
+    border-radius: 20px;
+}
+
+.custom-form {
+    border-radius: 20px;
+}
+
+.drop::before,
+.drop::after {
+    border: none;
+    content: none;
+}
+
+.dropdown .dropdown-menu {
+    transition: all 0.25s;
+    transform: scale(0.85);
+    max-height: 0;
+    display: block;
+    overflow: hidden;
+    opacity: 0;
+    padding-top: 100px;
+    border-radius: 20px;
+}
+
+.spinner {
+    animation: appear .3s;
+}
+
+.dropdown.show .dropdown-menu { /* For Bootstrap 4, use .dropdown.show instead of .dropdown.open */
+    max-height: 350px;
+    overflow-y: auto;
+    padding-top: 5px;
+    transform: scale(1);
+    opacity: 1;
+    transition: all 0.25s;
+}
+
+.click-reaction {
+    transition: all 0.3s;
+}
+
+.click-reaction:active {
+    transform: scale(0.98);
+}
+
+.locked-height {
+    max-height: 150px;
+}
+
+.drop-item {
+    transition: all .2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drop-menu {
+    width: max-content;
+    max-width: 250px;
+    z-index: 999;
+}
+
+.comments {
+    width: 250px !important;
+}
+
+@media only screen and (min-width: 400px) {
+    .comments {
+        width: 300px !important;
+    }
+}
+
+@media only screen and (min-width: 768px) {
+    .comments {
+        width: 350px !important;
+    }
+}
+
+.drop-item:active {
+    background-color: rgba(38, 0, 111, 0.6);
+    transform: scale(0.95);
+    border-radius: 15px;
+}
+
+.accept {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.custom-endform {
+    border-top-right-radius: 20px !important;
+    border-bottom-right-radius: 20px !important;
+    transition: all .2s ease-out;
+}
+
+.custom-endform:focus {
+    transform: scale(1.01);
+}
+
+.custom-radio {
+    height: 20px;
+    width: 20px;
+    border-radius: 20px;
+    background-color: white;
+    border: 3px solid #c5c5c5;
+    transition: .2s ease-in;
+}
+
+.custom-drop {
+    transition: .2s ease-out;
+}
+
+.custom-drop:active {
+    transform: scale(0.98);
+}
+
+.custom-radio:hover {
+    background-color: #c5c5c5;
+}
+
+.custom-queue-icon {
+    max-width: 60px;
+}
+
+input[type="radio"]:checked+label .custom-radio {
+    background-color: rgb(23, 122, 158);
+}
+
+
+@-webkit-keyframes appear {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    40% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes test {
+    0% {
+        margin-top: 50px;
+        opacity: 0;
+    }
+
+    100% {
+        margin-top: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes appear {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    40% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.nav-link {
+    color: rgb(0, 0, 0) !important;
+    font-size: 13pt;
+    transition: .3s ease-out;
+}
+
+.nav-link:active {
+    transform: scale(0.93);
+}
+
+.badge-primary {
+    background-color: rgba(38, 0, 111, 0.7);
+    font-weight: 100;
+}

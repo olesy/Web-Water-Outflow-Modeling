@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Вытекание воды из сосуда</title>
+    <link rel="stylesheet" type="text/css" href="./css/jsxgraph.css"/>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css"/>
+    <link rel="stylesheet" tyle="text/css" href="./css/style.css"/>
+    <script type="text/javascript"
+            src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+<nav class="navbar custom-nav">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Вытекание жидкости из сосуда</span>
+    </div>
+</nav>
+<div class="p-3">
+    <div class="row col-12 custom-paper">
+        <div class="col col-9">
+            <div id='jxgbox-1' class='jxgbox' style='width:100%; height:600px;'></div>
+        </div>
+        <div class="col col-3 card p-3">
+            <h5>Дифференциальное уравнение:</h5>
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+                <mfrac>
+                    <mrow class="MJX-TeXAtom-ORD">
+                        <mi>d</mi>
+                        <mi>z</mi>
+                    </mrow>
+                    <mrow class="MJX-TeXAtom-ORD">
+                        <msqrt>
+                            <mi>z</mi>
+                        </msqrt>
+                    </mrow>
+                </mfrac>
+                <mo>=</mo>
+                <mo>&#x2212;<!-- − --></mo>
+                <mfrac>
+                    <mrow class="MJX-TeXAtom-ORD">
+                        <mrow class="MJX-TeXAtom-ORD">
+                            <msup>
+                                <mi>a</mi>
+                                <mn>2</mn>
+                            </msup>
+                        </mrow>
+                    </mrow>
+                    <mrow class="MJX-TeXAtom-ORD">
+                        <mrow class="MJX-TeXAtom-ORD">
+                            <msup>
+                                <mi>R</mi>
+                                <mn>2</mn>
+                            </msup>
+                        </mrow>
+                    </mrow>
+                </mfrac>
+                <msqrt>
+                    <mn>2</mn>
+                    <mi>g</mi>
+                </msqrt>
+                <mi>d</mi>
+                <mi>t</mi>
+                <mo>.</mo>
+            </math>
+            <table class="table">
+                <tr>
+                    <td>Красный</td>
+                    <td>Метод Эйлера</td>
+                </tr>
+                <tr>
+                    <td>Зеленый</td>
+                    <td>Метод средней точки</td>
+                </tr>
+            </table>
+            <table class="table">
+                <tr>
+                    <td>Радиус сосуда</td>
+                    <td id="R"></td>
+                </tr>
+                <tr>
+                    <td>Радиус отверстия</td>
+                    <td id="a"></td>
+                </tr>
+                <tr>
+                    <td>Высота сосуда</td>
+                    <td id="height"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="col-12 p-3">
+    <div class="col-9 row p-3">
+        <div class="col col-10 custom-paper">
+            <table class="table" id="table">
+            </table>
+        </div>
+        <div class="col col-2">
+            <div class="btn btn-info text-light custom-btn p-2" onclick="update_table()">Обновить</div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" charset="UTF-8"
+        src="./js/jsxgraphcore.js"></script>
+<script type="text/javascript" charset="UTF-8"
+        src="./js/engine.js"></script>
+<script type="text/javascript" charset="UTF-8"
+        src="./js/bootstrap.min.js"></script>
+
+</body>
+</html>
