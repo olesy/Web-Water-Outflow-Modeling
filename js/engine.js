@@ -6,22 +6,47 @@ let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'w
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'});
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'});
 
+let graphs = {
+    "real": [null, null, true, "Аналитическое решение"],
+    "euler": [null, null, true, "Метод Эйлера"],
+    "midpoint": [null, null, true, "Метод средней точки"],
+    "ab2": [null, null, true, "Метод Адамса-Башфорта 2"],
+    "ab3": [null, null, true, "Метод Адамса-Башфорта 3"]
+}
 // Write to HTML table with methods points data
 function update_table() {
     //
-    output = "<tr><th>X</th><th>Метод Эйлера</th><th>Метод средней точки</th><th>Реальное значение</th></tr>"
+    let output = "<tr><th>X</th>";
+    for (let elem in graphs) {
+        if (graphs[elem][2]) {
+            output += "<th>" + graphs[elem][3] + "</th>"
+        }
+    }
     for (let i = 0; i < data_euler.length; i++) {
         if (isNaN(data_midp[i][0])) break;
-        output += "<tr><td>" + data_euler[i][1].toFixed(2) + "</td><td>" + data_euler[i][0].toString() + "</td><td>" +
-            data_midp[i][0].toString() + "</td><td>"
-            + f_real(data_euler[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y()).toString()
-            + "</td></tr>"
+        output += "<tr><td>" +
+            data_euler[i][1].toFixed(2) + "</td><td>" +
+            f_real(data_euler[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y()).toString()
+            + "</td>"
+        if (graphs["euler"][2]) {
+            output += "<td>" + + data_euler[i][0].toString() + "</td>"
+        }
+        if (graphs["midpoint"][2]) {
+            output += "<td>" + + data_midp[i][0].toString() + "</td>"
+        }
+        if (graphs["ab2"][2]) {
+            output += "<td>" + + data_ab2[i][0].toString() + "</td>"
+        }
+        if (graphs["ab3"][2]) {
+            output += "<td>" + + data_ab3[i][0].toString() + "</td>"
+        }
+        output += "</tr>"
     }
     document.getElementById("table").innerHTML = output
 }
 
 // Write to HTML parameters values
-let update_parameters = function(R, a, height) {
+let update_parameters = function (R, a, height) {
     document.getElementById("R").innerText = R.toString()
     document.getElementById("a").innerText = a.toString()
     document.getElementById("height").innerText = height.toString()
@@ -38,6 +63,8 @@ startZ = board.createElement('glider', [0, 10, board.defaultAxes.y], {
 let data_euler;
 let data_midp;
 let data_real;
+let data_ab2;
+let data_ab3;
 
 // Euler method function
 function solve_euler(x0, I, dt, f) {
@@ -46,6 +73,51 @@ function solve_euler(x0, I, dt, f) {
     for (let i = 1; i < N; ++i) {
         let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1])[0];
         data.push([dx_dt]);
+    }
+    return data
+}
+
+// Adams-Bashforth 2 method function
+function solve_adams_bashforth_2(x0, I, dt, f) {
+    let data = [x0];
+    let N = (I[1] - I[0]) / dt;
+    for (let i = 1; i < N; ++i) {
+        if (i === 1) {
+            // RK4 for 1st iteration
+            let k1 = f(0, data[i - 1][0])
+            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
+            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
+            let k4 = f(0, data[i - 1][0] + dt * k3)
+            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+            data.push([dx_dt]);
+        } else {
+            // Adams Bashforth, k=2
+            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
+            data.push([dx_dt]);
+        }
+    }
+    return data
+}
+
+// Adams-Bashforth 3 method function
+function solve_adams_bashforth_3(x0, I, dt, f) {
+    let data = [x0];
+    let N = (I[1] - I[0]) / dt;
+    for (let i = 1; i < N; ++i) {
+        if (i < 3) {
+            // RK4 for 1st & 2nd iteration
+            let k1 = f(0, data[i - 1][0])
+            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
+            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
+            let k4 = f(0, data[i - 1][0] + dt * k3)
+            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+            data.push([dx_dt]);
+        } else {
+            // Adams Bashforth, k=3
+            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
+                + 5 / 12 * f(0, data[i - 3][0]))
+            data.push([dx_dt]);
+        }
     }
     return data
 }
@@ -83,7 +155,7 @@ function solve_real(x0, I, R, a, dt, height) {
 }
 
 // Universal ODE solver (any method)
-function ode1(method = "real", R, a, h, height, update) {
+function ode_diff_water(method = "real", R, a, h, height, update) {
     let I1 = [0, 6];
     if (h <= 0) h = 1
     if (a > R) a = R
@@ -108,6 +180,10 @@ function ode1(method = "real", R, a, h, height, update) {
         data1 = solve_euler(x01, I1, h, f1);
     } else if (method === "midpoint") {
         data1 = solve_midpoint(x01, I1, h, f1)
+    } else if (method === "ab2") {
+        data1 = solve_adams_bashforth_2(x01, I1, h, f1)
+    } else if (method === "ab3") {
+        data1 = solve_adams_bashforth_3(x01, I1, h, f1)
     } else if (method === "real") {
         data1 = solve_real(x01, I1, R, a, h, height)
     }
@@ -121,11 +197,15 @@ function ode1(method = "real", R, a, h, height, update) {
 }
 
 // Evaluating methods
-data_euler = ode1("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+data_euler = ode_diff_water("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
     parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_midp = ode1("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+data_midp = ode_diff_water("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
     parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_real = ode1("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+data_ab2 = ode_diff_water("ab2", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+data_ab3 = ode_diff_water("ab3", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+data_real = ode_diff_water("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
     parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
 
 update_table()
@@ -135,9 +215,13 @@ let tR = [];
 let dataZ = [];
 let dataZM = [];
 let dataZR = [];
+let dataZAB2 = [];
+let dataZAB3 = [];
 for (let i = 0; i < data_euler.length; i++) {
     dataZ[i] = data_euler[i][0];
     dataZM[i] = data_midp[i][0];
+    dataZAB2[i] = data_ab2[i][0];
+    dataZAB3[i] = data_ab3[i][0];
     tM[i] = data_euler[i][1];
 }
 for (let i = 0; i < data_real.length; i++) {
@@ -147,9 +231,9 @@ for (let i = 0; i < data_real.length; i++) {
 
 // Plots setup
 
-g_euler = board.createElement('curve', [tM, dataZ], {strokeColor:'red', strokeWidth:'3px'});
+g_euler = board.create('curve', [tM, dataZ], {strokeColor:'red', strokeWidth:'3px'});
 g_euler.updateDataArray = function () {
-    data_euler = ode1("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    data_euler = ode_diff_water("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
@@ -158,11 +242,11 @@ g_euler.updateDataArray = function () {
         this.dataY[i] = data_euler[i][0];
     }
 };
-let p_euler = board.create('glider', [g_euler], {name:'EU', strokeColor:'red', fillColor:'black'});
+let p_euler = board.create('glider', [g_euler], {name:'EU', strokeColor:'red', fillColor:'red'});
 
-g_midpoint = board.createElement('curve', [tM, dataZM], {strokeColor:'green', strokeWidth:'3px'});
+g_midpoint = board.create('curve', [tM, dataZM], {strokeColor:'green', strokeWidth:'3px'});
 g_midpoint.updateDataArray = function () {
-    data_midp = ode1("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    data_midp = ode_diff_water("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
@@ -171,11 +255,37 @@ g_midpoint.updateDataArray = function () {
         this.dataY[i] = data_midp[i][0];
     }
 };
-let p_midpoint = board.create('glider', [g_midpoint], {name:'MP', strokeColor:'green', fillColor:'black'});
+let p_midpoint = board.create('glider', [g_midpoint], {name:'MP', strokeColor:'green', fillColor:'green'});
 
-g_real = board.createElement('curve', [tR, dataZR], {strokeColor:'blue', strokeWidth:'1px'});
+g_ab2 = board.create('curve', [tM, dataZAB2], {strokeColor:'purple', strokeWidth:'3px'});
+g_ab2.updateDataArray = function () {
+    data_ab2 = ode_diff_water("ab2", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+        parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+    this.dataX = [];
+    this.dataY = [];
+    for (let i = 0; i < data_ab2.length; i++) {
+        this.dataX[i] = data_ab2[i][1];
+        this.dataY[i] = data_ab2[i][0];
+    }
+};
+let p_ab2 = board.create('glider', [g_ab2], {name:'AB2', strokeColor:'purple', fillColor:'purple'});
+
+g_ab3 = board.create('curve', [tM, dataZAB3], {strokeColor:'olive', strokeWidth:'3px'});
+g_ab3.updateDataArray = function () {
+    data_ab3 = ode_diff_water("ab3", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+        parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+    this.dataX = [];
+    this.dataY = [];
+    for (let i = 0; i < data_ab3.length; i++) {
+        this.dataX[i] = data_ab3[i][1];
+        this.dataY[i] = data_ab3[i][0];
+    }
+};
+let p_ab3 = board.create('glider', [g_ab3], {name:'AB3', strokeColor:'olive', fillColor:'olive'});
+
+g_real = board.create('curve', [tR, dataZR], {strokeColor:'blue', strokeWidth:'1px'});
 g_real.updateDataArray = function () {
-    data_real = ode1("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    data_real = ode_diff_water("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
@@ -184,69 +294,26 @@ g_real.updateDataArray = function () {
         this.dataY[i] = data_real[i][0];
     }
 };
-let p_real = board.create('glider', [g_real], {name:'Real', strokeColor:'blue', fillColor:'black'});
+let p_real = board.create('glider', [g_real], {name:'Real', strokeColor:'blue', fillColor:'blue'});
 
+graphs = {
+    "real": [g_real, p_real, true, "Аналитическое решение"],
+    "euler": [g_euler, p_euler, true, "Метод Эйлера"],
+    "midpoint": [g_midpoint, p_midpoint, true, "Метод средней точки"],
+    "ab2": [g_ab2, p_ab2, true, "Метод Адамса-Башфорта 2"],
+    "ab3": [g_ab3, p_ab3, true, "Метод Адамса-Башфорта 3"]
+}
 
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-$(document).ready(function() {
-    try {
-        $('body').ripples({
-            resolution: 512,
-            dropRadius: 20, //px
-            perturbance: 0.04,
-        });
-        $('main').ripples({
-            resolution: 128,
-            dropRadius: 10, //px
-            perturbance: 0.04,
-        });
+function update_graph(name, element) {
+    let objects = graphs[name]
+    if (element.checked) {
+        objects[0].showElement()
+        objects[1].showElement()
+        objects[2] = true
+    } else {
+        objects[0].hideElement()
+        objects[1].hideElement()
+        objects[2] = false
     }
-    catch (e) {
-        $('.error').show().text(e);
-    }
-
-    $('.disable').show().on('click', function() {
-        $('body, main').ripples('destroy');
-        $(this).hide();
-    });
-
-    setInterval(function() {
-        var $el = $('main');
-        var x = Math.random() * $el.outerWidth();
-        var y = Math.random() * $el.outerHeight();
-        var dropRadius = 20;
-        var strength = 0.04 + Math.random() * 0.04;
-
-        $el.ripples('drop', x, y, dropRadius, strength);
-    }, 400);
-});
+    update_table()
+}

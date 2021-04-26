@@ -90,63 +90,90 @@
 </div>
 <div class="div d-flex row p-3 col-12">
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb1" checked>
-        <label for="cb1"><div class="tick"></div></label>
-        <div class="">Метод Эйлера</div>
+        <input type="checkbox" id="cb0" checked onchange="update_graph('real',this)">
+        <label class="label" for="cb0">
+            <div class="tick"></div>
+        </label>
+        <label for="cb0">Аналитическое решение</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb2" checked>
-        <label for="cb2"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <input type="checkbox" id="cb1" checked onchange="update_graph('euler',this)">
+        <label class="label" for="cb1">
+            <div class="tick"></div>
+        </label>
+        <label for="cb1">Метод Эйлера</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb3" checked>
-        <label for="cb3"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <input type="checkbox" id="cb2" checked onchange="update_graph('midpoint',this)">
+        <label class="label" for="cb2">
+            <div class="tick"></div>
+        </label>
+        <label for="cb2">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb4" checked>
-        <label for="cb4"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <input type="checkbox" id="cb3" checked onchange="update_graph('ab2',this)">
+        <label class="label" for="cb3">
+            <div class="tick"></div>
+        </label>
+        <label for="cb3">Метод Адамса-Башфорта 2 порядка</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
+        <input type="checkbox" id="cb4" checked onchange="update_graph('ab3',this)">
+        <label class="label" for="cb4">
+            <div class="tick"></div>
+        </label>
+        <label for="cb4">Метод Адамса-Башфорта 3 порядка</label>
+    </div>
+    <!-- <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb5" checked>
-        <label for="cb5"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <label class="label" for="cb5">
+            <div class="tick"></div>
+        </label>
+        <label for="cb5">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb6" checked>
-        <label for="cb6"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <label class="label" for="cb6">
+            <div class="tick"></div>
+        </label>
+        <label for="cb6">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb7" checked>
-        <label for="cb7"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <label class="label" for="cb7">
+            <div class="tick"></div>
+        </label>
+        <label for="cb7">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb8" checked>
-        <label for="cb8"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <label class="label" for="cb8">
+            <div class="tick"></div>
+        </label>
+        <label for="cb8">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb9" checked>
-        <label for="cb9"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
+        <label class="label" for="cb9">
+            <div class="tick"></div>
+        </label>
+        <label for="cb9">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb10" checked>
-        <label for="cb10"><div class="tick"></div></label>
-        <div class="">Метод средней точки</div>
-    </div>
+        <label for="cb10" class="label">
+            <div class="tick"></div>
+        </label>
+        <label for="cb10">Метод средней точки</label>
+    </div> -->
 </div>
 <div class="col-12 p-3">
-    <div class="col-9 row p-3">
-        <div class="col col-10 custom-paper">
+    <div class="col-12 row p-3">
+        <div class="col col-11 custom-paper">
             <table class="table" id="table">
             </table>
         </div>
-        <div class="col col-2">
+        <div class="col col-1">
             <div class="btn btn-info text-light custom-btn p-2" onclick="update_table()">Обновить</div>
         </div>
     </div>
