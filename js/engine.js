@@ -29,16 +29,16 @@ function update_table() {
             f_real(data_euler[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y()).toString()
             + "</td>"
         if (graphs["euler"][2]) {
-            output += "<td>" + + data_euler[i][0].toString() + "</td>"
+            output += "<td>" + data_euler[i][0].toString() + "</td>"
         }
         if (graphs["midpoint"][2]) {
-            output += "<td>" + + data_midp[i][0].toString() + "</td>"
+            output += "<td>" + data_midp[i][0].toString() + "</td>"
         }
         if (graphs["ab2"][2]) {
-            output += "<td>" + + data_ab2[i][0].toString() + "</td>"
+            output += "<td>" + data_ab2[i][0].toString() + "</td>"
         }
         if (graphs["ab3"][2]) {
-            output += "<td>" + + data_ab3[i][0].toString() + "</td>"
+            output += "<td>" + data_ab3[i][0].toString() + "</td>"
         }
         output += "</tr>"
     }
