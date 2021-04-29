@@ -1,5 +1,5 @@
 // Init plot engine
-board = JXG.JSXGraph.initBoard('jxgbox-1', {boundingbox:[-1, 11, 4, -1], axis:true, grid:true, showCopyright:false});
+board = JXG.JSXGraph.initBoard('jxgbox-1', {boundingbox:[-1, 11, 4, -1], needsFullUpdate: true, keepAspectRatio: false, axis:true, grid:true, showCopyright:false});
 
 // Parameter sliders
 let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'width: 100px'});
@@ -12,6 +12,13 @@ let graphs = {
     "midpoint": [null, null, true, "Метод средней точки"],
     "ab2": [null, null, true, "Метод Адамса-Башфорта 2"],
     "ab3": [null, null, true, "Метод Адамса-Башфорта 3"]
+}
+
+function update_range() {
+    let x_max = document.getElementById("xmax").value
+    let y_max = document.getElementById("ymax").value
+    board.setBoundingBox([-0.1, y_max * 0.5, x_max * 0.5, -0.4])
+    board.update()
 }
 // Write to HTML table with methods points data
 function update_table() {
@@ -52,12 +59,17 @@ let update_parameters = function (R, a, height) {
     document.getElementById("height").innerText = height.toString()
 }
 
+let update_time = function(time) {
+    document.getElementById("time").innerText = time.toString()
+}
+
 // Glider to move height of container
 startZ = board.createElement('glider', [0, 10, board.defaultAxes.y], {
     name:'Height',
     strokeColor:'blue',
     fillColor:'blue'
 });
+
 
 // Methods results data
 let data_euler;
@@ -147,6 +159,7 @@ function solve_real(x0, I, R, a, dt, height) {
     let data = [x0];
     let g = 9.80665
     I[1] = Math.pow(R, 2) / Math.pow(a, 2) * Math.sqrt(2 * height / g)
+    update_time(I[1])
     let N = (I[1] - I[0]) / dt;
     for (let i = 1; i < N; i++) {
         data.push([f_real(I[0] + dt * i, R, a, height)]);
@@ -156,7 +169,7 @@ function solve_real(x0, I, R, a, dt, height) {
 
 // Universal ODE solver (any method)
 function ode_diff_water(method = "real", R, a, h, height, update) {
-    let I1 = [0, 6];
+    let I1 = [0, 13];
     if (h <= 0) h = 1
     if (a > R) a = R
     if (a <= 0) a = 1

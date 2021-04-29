@@ -16,7 +16,7 @@
     </div>
 </nav>
 <div class="p-3">
-    <div class="row col-12 custom-paper">
+    <div class="row col-12">
         <div class="col col-9">
             <div id='jxgbox-1' class='jxgbox' style='width:100%; height:600px;'></div>
         </div>
@@ -83,6 +83,21 @@
                 <tr>
                     <td>Высота сосуда</td>
                     <td id="height"></td>
+                </tr>
+                <tr>
+                    <td>Время полного вытекания</td>
+                    <td id="time"></td>
+                </tr>
+                <tr>
+                    <label>Масштабирование графика</label>
+                    <div class="d-flex flex-row">
+                        <label for="xmax" class="px-2">X: </label>
+                        <input type="range" id="xmax" class="form-range" min="1" max="50" value="8" onchange="update_range()"/>
+                    </div>
+                    <div class="d-flex flex-row">
+                        <label for="ymax" class="px-2">Y: </label>
+                        <input type="range" id="ymax" class="form-range" min="1" max="50" value="22" onchange="update_range()"/>
+                    </div>
                 </tr>
             </table>
         </div>
