@@ -1,17 +1,44 @@
 // Init plot engine
-board = JXG.JSXGraph.initBoard('jxgbox-1', {boundingbox:[-1, 11, 4, -1], needsFullUpdate: true, keepAspectRatio: false, axis:true, grid:true, showCopyright:false});
+board = JXG.JSXGraph.initBoard('jxgbox-1', {
+    boundingbox:[-1, 11, 4, -1],
+    needsFullUpdate:true,
+    keepAspectRatio:false,
+    axis:true,
+    grid:true,
+    showCopyright:false
+});
 
 // Parameter sliders
 let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'width: 100px'});
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'});
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'});
 
+let methods = ["euler", "midpoint", "ab2", "ab3"]
+
 let graphs = {
-    "real": [null, null, true, "Аналитическое решение"],
-    "euler": [null, null, true, "Метод Эйлера"],
-    "midpoint": [null, null, true, "Метод средней точки"],
-    "ab2": [null, null, true, "Метод Адамса-Башфорта 2"],
-    "ab3": [null, null, true, "Метод Адамса-Башфорта 3"]
+    "real":[null, null, true, "z(t)", {
+        "data": [],
+    }],
+    "euler":[null, null, true, "Метод Эйлера", {
+        "data": [],
+        "abs_err": [],
+        "err": []
+    }],
+    "midpoint":[null, null, true, "Метод средней точки", {
+        "data": [],
+        "abs_err": [],
+        "err": []
+    }],
+    "ab2":[null, null, true, "Метод Адамса-Башфорта 2", {
+        "data": [],
+        "abs_err": [],
+        "err": []
+    }],
+    "ab3":[null, null, true, "Метод Адамса-Башфорта 3", {
+        "data": [],
+        "abs_err": [],
+        "err": []
+    }]
 }
 
 function update_range() {
@@ -20,36 +47,44 @@ function update_range() {
     board.setBoundingBox([-0.1, y_max * 0.5, x_max * 0.5, -0.4])
     board.update()
 }
-// Write to HTML table with methods points data
+
+// Write to HTML table methods points data, errors
 function update_table() {
-    //
-    let output = "<tr><th>X</th>";
+    let output = "<tr><th>t</th>";
     for (let elem in graphs) {
         if (graphs[elem][2]) {
             output += "<th>" + graphs[elem][3] + "</th>"
         }
     }
-    for (let i = 0; i < data_euler.length; i++) {
-        if (isNaN(data_midp[i][0])) break;
+    let abs_errors = output
+    let errors = output
+    let real = 0
+    for (let i = 0; i < graphs.euler[4].data.length; i++) {
+        if (isNaN(graphs.midpoint[4].data[i][0])) break;
+        real = f_real(graphs.midpoint[4].data[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y())
         output += "<tr><td>" +
-            data_euler[i][1].toFixed(2) + "</td><td>" +
-            f_real(data_euler[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y()).toString()
-            + "</td>"
-        if (graphs["euler"][2]) {
-            output += "<td>" + data_euler[i][0].toString() + "</td>"
+            graphs.euler[4].data[i][1].toFixed(2) + "</td>";
+        errors += "<tr><td>" +
+            graphs.euler[4].data[i][1].toFixed(2) + "</td>";
+        abs_errors += "<tr><td>" +
+            graphs.euler[4].data[i][1].toFixed(2) + "</td>";
+        if (graphs.real[2]) {
+            output += "</td><td>" + real.toString() + "</td>"
+            errors += "</td><td>" + "0" + "</td>"
+            abs_errors += "</td><td>" + "0" + "</td>"
         }
-        if (graphs["midpoint"][2]) {
-            output += "<td>" + data_midp[i][0].toString() + "</td>"
-        }
-        if (graphs["ab2"][2]) {
-            output += "<td>" + data_ab2[i][0].toString() + "</td>"
-        }
-        if (graphs["ab3"][2]) {
-            output += "<td>" + data_ab3[i][0].toString() + "</td>"
+        for (let j of methods) {
+            if (graphs[j][2]) {
+                output += "<td>" + graphs[j][4].data[i][0].toString() + "</td>"
+                errors += "<td>" + (Math.abs(graphs[j][4].data[i][0] - real) / real).toString() + "</td>"
+                abs_errors += "<td>" + (Math.abs(graphs[j][4].data[i][0] - real)).toString() + "</td>"
+            }
         }
         output += "</tr>"
     }
     document.getElementById("table").innerHTML = output
+    document.getElementById("errors").innerHTML = errors
+    document.getElementById("abs-errors").innerHTML = abs_errors
 }
 
 // Write to HTML parameters values
@@ -59,7 +94,7 @@ let update_parameters = function (R, a, height) {
     document.getElementById("height").innerText = height.toString()
 }
 
-let update_time = function(time) {
+let update_time = function (time) {
     document.getElementById("time").innerText = time.toString()
 }
 
@@ -69,14 +104,6 @@ startZ = board.createElement('glider', [0, 10, board.defaultAxes.y], {
     strokeColor:'blue',
     fillColor:'blue'
 });
-
-
-// Methods results data
-let data_euler;
-let data_midp;
-let data_real;
-let data_ab2;
-let data_ab3;
 
 // Euler method function
 function solve_euler(x0, I, dt, f) {
@@ -210,16 +237,10 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
 }
 
 // Evaluating methods
-data_euler = ode_diff_water("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_midp = ode_diff_water("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_ab2 = ode_diff_water("ab2", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_ab3 = ode_diff_water("ab3", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
-data_real = ode_diff_water("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-    parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+for (let i of ["euler", "midpoint", "ab2", "ab3", "real"]) {
+    graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+        parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
+}
 
 update_table()
 
@@ -230,92 +251,85 @@ let dataZM = [];
 let dataZR = [];
 let dataZAB2 = [];
 let dataZAB3 = [];
-for (let i = 0; i < data_euler.length; i++) {
-    dataZ[i] = data_euler[i][0];
-    dataZM[i] = data_midp[i][0];
-    dataZAB2[i] = data_ab2[i][0];
-    dataZAB3[i] = data_ab3[i][0];
-    tM[i] = data_euler[i][1];
+for (let i = 0; i < graphs.euler[4].data.length; i++) {
+    dataZ[i] = graphs.euler[4].data[i][0];
+    dataZM[i] = graphs.midpoint[4].data[i][0];
+    dataZAB2[i] = graphs.ab2[4].data[i][0];
+    dataZAB3[i] = graphs.ab3[4].data[i][0];
+    tM[i] = graphs.euler[4].data[i][1];
 }
-for (let i = 0; i < data_real.length; i++) {
-    dataZR[i] = data_real[i][0]
-    tR[i] = data_real[i][1]
+for (let i = 0; i < graphs.real[4].data.length; i++) {
+    dataZR[i] = graphs.real[4].data[i][0]
+    tR[i] = graphs.real[4].data[i][1]
 }
 
 // Plots setup
 
-g_euler = board.create('curve', [tM, dataZ], {strokeColor:'red', strokeWidth:'3px'});
-g_euler.updateDataArray = function () {
-    data_euler = ode_diff_water("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+graphs.euler[0] = board.create('curve', [tM, dataZ], {strokeColor:'red', strokeWidth:'3px'});
+graphs.euler[0].updateDataArray = function () {
+    graphs.euler[4].data = ode_diff_water("euler", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
-    for (let i = 0; i < data_euler.length; i++) {
-        this.dataX[i] = data_euler[i][1];
-        this.dataY[i] = data_euler[i][0];
+    for (let i = 0; i < graphs.euler[4].data.length; i++) {
+        this.dataX[i] = graphs.euler[4].data[i][1];
+        this.dataY[i] = graphs.euler[4].data[i][0];
     }
 };
-let p_euler = board.create('glider', [g_euler], {name:'EU', strokeColor:'red', fillColor:'red'});
+graphs.euler[1] = board.create('glider', [graphs.euler[0]], {name:'EU', strokeColor:'red', fillColor:'red'});
 
-g_midpoint = board.create('curve', [tM, dataZM], {strokeColor:'green', strokeWidth:'3px'});
-g_midpoint.updateDataArray = function () {
-    data_midp = ode_diff_water("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+graphs.midpoint[0] = board.create('curve', [tM, dataZM], {strokeColor:'green', strokeWidth:'3px'});
+graphs.midpoint[0].updateDataArray = function () {
+    graphs.midpoint[4].data = ode_diff_water("midpoint", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
-    for (let i = 0; i < data_midp.length; i++) {
-        this.dataX[i] = data_midp[i][1];
-        this.dataY[i] = data_midp[i][0];
+    for (let i = 0; i < graphs.midpoint[4].data.length; i++) {
+        this.dataX[i] = graphs.midpoint[4].data[i][1];
+        this.dataY[i] = graphs.midpoint[4].data[i][0];
     }
 };
-let p_midpoint = board.create('glider', [g_midpoint], {name:'MP', strokeColor:'green', fillColor:'green'});
+graphs.midpoint[1] = board.create('glider', [graphs.midpoint[0]], {name:'MP', strokeColor:'green', fillColor:'green'});
 
-g_ab2 = board.create('curve', [tM, dataZAB2], {strokeColor:'purple', strokeWidth:'3px'});
-g_ab2.updateDataArray = function () {
-    data_ab2 = ode_diff_water("ab2", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+graphs.ab2[0] = board.create('curve', [tM, dataZAB2], {strokeColor:'purple', strokeWidth:'3px'});
+graphs.ab2[0].updateDataArray = function () {
+    graphs.ab2[4].data = ode_diff_water("ab2", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
-    for (let i = 0; i < data_ab2.length; i++) {
-        this.dataX[i] = data_ab2[i][1];
-        this.dataY[i] = data_ab2[i][0];
+    for (let i = 0; i < graphs.ab2[4].data.length; i++) {
+        this.dataX[i] = graphs.ab2[4].data[i][1];
+        this.dataY[i] = graphs.ab2[4].data[i][0];
     }
 };
-let p_ab2 = board.create('glider', [g_ab2], {name:'AB2', strokeColor:'purple', fillColor:'purple'});
+graphs.ab2[1] = board.create('glider', [graphs.ab2[0]], {name:'AB2', strokeColor:'purple', fillColor:'purple'});
 
-g_ab3 = board.create('curve', [tM, dataZAB3], {strokeColor:'olive', strokeWidth:'3px'});
-g_ab3.updateDataArray = function () {
-    data_ab3 = ode_diff_water("ab3", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+graphs.ab3[0] = board.create('curve', [tM, dataZAB3], {strokeColor:'olive', strokeWidth:'3px'});
+graphs.ab3[0].updateDataArray = function () {
+    graphs.ab3[4].data = ode_diff_water("ab3", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
-    for (let i = 0; i < data_ab3.length; i++) {
-        this.dataX[i] = data_ab3[i][1];
-        this.dataY[i] = data_ab3[i][0];
+    for (let i = 0; i < graphs.ab3[4].data.length; i++) {
+        this.dataX[i] = graphs.ab3[4].data[i][1];
+        this.dataY[i] = graphs.ab3[4].data[i][0];
     }
 };
-let p_ab3 = board.create('glider', [g_ab3], {name:'AB3', strokeColor:'olive', fillColor:'olive'});
+graphs.ab3[1] = board.create('glider', [graphs.ab3[0]], {name:'AB3', strokeColor:'olive', fillColor:'olive'});
 
-g_real = board.create('curve', [tR, dataZR], {strokeColor:'blue', strokeWidth:'1px'});
-g_real.updateDataArray = function () {
-    data_real = ode_diff_water("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+graphs.real[0] = board.create('curve', [tR, dataZR], {strokeColor:'blue', strokeWidth:'1px'});
+graphs.real[0].updateDataArray = function () {
+    graphs.real[4].data = ode_diff_water("real", parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters);
     this.dataX = [];
     this.dataY = [];
-    for (let i = 0; i < data_real.length; i++) {
-        this.dataX[i] = data_real[i][1];
-        this.dataY[i] = data_real[i][0];
+    for (let i = 0; i < graphs.real[4].data.length; i++) {
+        this.dataX[i] = graphs.real[4].data[i][1];
+        this.dataY[i] = graphs.real[4].data[i][0];
     }
 };
-let p_real = board.create('glider', [g_real], {name:'Real', strokeColor:'blue', fillColor:'blue'});
+graphs.real[1] = board.create('glider', [graphs.real[0]], {name:'Real', strokeColor:'blue', fillColor:'blue'});
 
-graphs = {
-    "real": [g_real, p_real, true, "Аналитическое решение"],
-    "euler": [g_euler, p_euler, true, "Метод Эйлера"],
-    "midpoint": [g_midpoint, p_midpoint, true, "Метод средней точки"],
-    "ab2": [g_ab2, p_ab2, true, "Метод Адамса-Башфорта 2"],
-    "ab3": [g_ab3, p_ab3, true, "Метод Адамса-Башфорта 3"]
-}
 
 function update_graph(name, element) {
     let objects = graphs[name]

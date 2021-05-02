@@ -92,11 +92,13 @@
                     <label>Масштабирование графика</label>
                     <div class="d-flex flex-row">
                         <label for="xmax" class="px-2">X: </label>
-                        <input type="range" id="xmax" class="form-range" min="1" max="50" value="8" onchange="update_range()"/>
+                        <input type="range" id="xmax" class="form-range" min="1" max="50" value="8"
+                               onchange="update_range()"/>
                     </div>
                     <div class="d-flex flex-row">
                         <label for="ymax" class="px-2">Y: </label>
-                        <input type="range" id="ymax" class="form-range" min="1" max="50" value="22" onchange="update_range()"/>
+                        <input type="range" id="ymax" class="form-range" min="1" max="50" value="22"
+                               onchange="update_range()"/>
                     </div>
                 </tr>
             </table>
@@ -185,6 +187,7 @@
 <div class="col-12 p-3">
     <div class="col-12 row p-3">
         <div class="col col-11 custom-paper">
+            <h5> Таблица точек </h5>
             <table class="table" id="table">
             </table>
         </div>
@@ -193,6 +196,27 @@
         </div>
     </div>
 </div>
+
+<div class="col-12 p-3">
+    <div class="col-12 row p-3">
+        <div class="col col-11 custom-paper">
+            <h5> Таблица относительных ошибок </h5>
+            <table class="table" id="errors">
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="col-12 p-3">
+    <div class="col-12 row p-3">
+        <div class="col col-11 custom-paper">
+            <h5> Таблица абсолютных ошибок </h5>
+            <table class="table" id="abs-errors">
+            </table>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript" charset="UTF-8"
         src="./js/jsxgraphcore.js"></script>
 <script type="text/javascript" charset="UTF-8"
