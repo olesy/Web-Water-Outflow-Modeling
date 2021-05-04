@@ -82,6 +82,10 @@
                     <td style="color: saddlebrown;">Неявный метод Эйлера</td>
                     <td>IEU</td>
                 </tr>
+                <tr>
+                    <td style="color: darkslateblue;">Неявный метод средней точки</td>
+                    <td>IEU</td>
+                </tr>
             </table>
             <table class="table">
                 <tr>
@@ -160,14 +164,14 @@
         </label>
         <label for="cb6">Неявный метод Эйлера</label>
     </div>
-    <!--<div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb6" checked>
-        <label class="label" for="cb6">
+    <div class="d-flex align-items-center col-auto p-3">
+        <input type="checkbox" id="cb7" checked onchange="update_graph('imp_midpoint',this)">
+        <label class="label" for="cb7">
             <div class="tick"></div>
         </label>
-        <label for="cb6">Метод средней точки</label>
+        <label for="cb7">Неявный метод средней точки</label>
     </div>
-    <div class="d-flex align-items-center col-auto p-3">
+    <!--<div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb7" checked>
         <label class="label" for="cb7">
             <div class="tick"></div>

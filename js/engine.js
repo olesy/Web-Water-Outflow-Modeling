@@ -43,7 +43,12 @@ let graphs = {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "saddlebrown", "IEU"]
+    }, "saddlebrown", "IEU"],
+    "imp_midpoint":[null, null, true, "Неявный метод средней точки", {
+        "data":[],
+        "abs_err":[],
+        "err":[]
+    }, "darkslateblue", "IMP"],
 }
 
 // Change XY range
@@ -215,11 +220,12 @@ function solve_real(x0, I, R, a, dt, height) {
     return data
 }
 
-function solve_newton(x0, f, f_dot, tol = 1.0e-9) {
+function solve_newton(x0, f, f_dot, tol = 1.0e-12) {
     let max_iter = 50
     let x = x0
     let prev = 0
     for (let i = 0; i < max_iter; i++) {
+        console.log(i)
         prev = x
         x -= f(0, x) / f_dot(0, x)
         if (Math.abs(x - prev) < tol) {
@@ -243,7 +249,23 @@ function solve_implicit_euler(x0, I, dt, f, f_dot) {
             return (data[i - 1][0] + dt * f(t1, x1) - x1)
         }
         let dx_dt = solve_newton(data[i - 1][0], exp, exp_dot)
-        console.log(dx_dt)
+        data.push([dx_dt])
+    }
+    return data
+}
+
+function solve_implicit_midpoint(x0, I, dt, f, f_dot) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    for (let i = 1; i < N; ++i) {
+        let k1 = f(0, data[i - 1][0])
+        let exp = function (t1, x1) {
+            return f(t1, x1 * dt / 2 + data[i - 1][0]) - x1
+        }
+        let exp_dot = function (t1, x1) {
+            return f_dot(t1, x1 * dt / 2 + data[i - 1][0]) - 1
+        }
+        let dx_dt = data[i - 1][0] + dt * solve_newton(k1, exp, exp_dot)
         data.push([dx_dt])
     }
     return data
@@ -290,6 +312,8 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
         data1 = solve_real(x01, I1, R, a, h, height)
     } else if (method === "imp_euler") {
         data1 = solve_implicit_euler(x01, I1, h, f1, f1_dot)
+    } else if (method === "imp_midpoint") {
+        data1 = solve_implicit_midpoint(x01, I1, h, f1, f1_dot)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -300,7 +324,7 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
 }
 
 // Evaluating methods
-for (let i of ["euler", "midpoint", "ab2", "ab3", "imp_euler", "real"]) {
+for (let i of ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "real"]) {
     graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
 }
