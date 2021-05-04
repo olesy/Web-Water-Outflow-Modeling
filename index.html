@@ -63,12 +63,24 @@
             </math>
             <table class="table">
                 <tr>
-                    <td style="color: rgb(214, 52, 52)">Красный</td>
-                    <td>Метод Эйлера</td>
+                    <td style="color: rgb(214, 52, 52)">Метод Эйлера</td>
+                    <td>EU</td>
                 </tr>
                 <tr>
-                    <td style="color: seagreen;">Зеленый</td>
-                    <td>Метод средней точки</td>
+                    <td style="color: seagreen;">Метод средней точки</td>
+                    <td>MP</td>
+                </tr>
+                <tr>
+                    <td style="color: darkorange;">Метод Адамса-Башфорта 2</td>
+                    <td>AB2</td>
+                </tr>
+                <tr>
+                    <td style="color: hotpink;">Метод Адамса-Башфорта 3</td>
+                    <td>AB3</td>
+                </tr>
+                <tr>
+                    <td style="color: saddlebrown;">Неявный метод Эйлера</td>
+                    <td>IEU</td>
                 </tr>
             </table>
             <table class="table">
@@ -141,14 +153,14 @@
         </label>
         <label for="cb4">Метод Адамса-Башфорта 3 порядка</label>
     </div>
-    <!-- <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb5" checked>
-        <label class="label" for="cb5">
+    <div class="d-flex align-items-center col-auto p-3">
+        <input type="checkbox" id="cb6" checked onchange="update_graph('imp_euler',this)">
+        <label class="label" for="cb6">
             <div class="tick"></div>
         </label>
-        <label for="cb5">Метод средней точки</label>
+        <label for="cb6">Неявный метод Эйлера</label>
     </div>
-    <div class="d-flex align-items-center col-auto p-3">
+    <!--<div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb6" checked>
         <label class="label" for="cb6">
             <div class="tick"></div>
@@ -186,20 +198,20 @@
 </div>
 <div class="col-12 p-3">
     <div class="col-12 row p-3">
-        <div class="col col-11 custom-paper">
-            <h5> Таблица точек </h5>
-            <table class="table" id="table">
+        <div class="col col-12 custom-paper">
+            <div class="d-flex flex-row justify-content-between align-items-center">
+                <h5 class="m-0 p-0"> Таблица точек </h5>
+                <div class="btn btn-outline-success custom-btn" onclick="update_table()">Обновить</div>
+            </div>
+            <table class="table table-sm" id="table">
             </table>
-        </div>
-        <div class="col col-1">
-            <div class="btn btn-info text-light custom-btn p-2" onclick="update_table()">Обновить</div>
         </div>
     </div>
 </div>
 
 <div class="col-12 p-3">
     <div class="col-12 row p-3">
-        <div class="col col-11 custom-paper">
+        <div class="col col-12 custom-paper">
             <h5> Таблица относительных ошибок </h5>
             <table class="table" id="errors">
             </table>
@@ -209,7 +221,7 @@
 
 <div class="col-12 p-3">
     <div class="col-12 row p-3">
-        <div class="col col-11 custom-paper">
+        <div class="col col-12 custom-paper">
             <h5> Таблица абсолютных ошибок </h5>
             <table class="table" id="abs-errors">
             </table>
