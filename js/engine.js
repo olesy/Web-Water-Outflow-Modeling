@@ -13,7 +13,7 @@ let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'w
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'})
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'})
 
-let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler"]
+let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint"]
 
 let graphs = {
     "real":[null, null, true, "z(t)", {
@@ -77,16 +77,20 @@ function update_graph(name, element) {
 // Write to HTML table methods points data, errors
 function update_table() {
     let output = "<tr><th>t</th>"
+    let abs_errors = output
+    let errors = output
     for (let elem in graphs) {
         if (graphs[elem][2]) {
             output += "<th>" + graphs[elem][3] + "</th>"
+            if (elem !== "real") {
+                abs_errors += "<th>" + graphs[elem][3] + "</th>"
+                errors += "<th>" + graphs[elem][3] + "</th>"
+            }
         }
     }
-    let abs_errors = output
-    let errors = output
     let real = 0
     for (let i = 0; i < graphs.euler[4].data.length; i++) {
-        if (isNaN(graphs.midpoint[4].data[i][0])) break
+        if (isNaN(graphs.imp_euler[4].data[i][0])) break
         real = f_real(graphs.midpoint[4].data[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y())
         output += "<tr><td>" +
             graphs.euler[4].data[i][1].toFixed(2) + "</td>"
@@ -96,8 +100,6 @@ function update_table() {
             graphs.euler[4].data[i][1].toFixed(2) + "</td>"
         if (graphs.real[2]) {
             output += "</td><td>" + real.toString() + "</td>"
-            errors += "</td><td>" + "0" + "</td>"
-            abs_errors += "</td><td>" + "0" + "</td>"
         }
         for (let j of methods) {
             if (graphs[j][2]) {
@@ -158,6 +160,8 @@ function solve_adams_bashforth_2(x0, I, dt, f) {
         } else {
             // Adams Bashforth, k=2
             let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
+            if (dx_dt > data[i - 1][0])
+                data.push([NaN])
             data.push([dx_dt])
         }
     }
@@ -181,6 +185,8 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
             // Adams Bashforth, k=3
             let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
                 + 5 / 12 * f(0, data[i - 3][0]))
+            if (dx_dt > data[i - 1][0])
+                data.push([NaN])
             data.push([dx_dt])
         }
     }
@@ -220,19 +226,18 @@ function solve_real(x0, I, R, a, dt, height) {
     return data
 }
 
-function solve_newton(x0, f, f_dot, tol = 1.0e-12) {
+function solve_newton(x0, f, f_dot, tol = 1.0e-9) {
     let max_iter = 50
     let x = x0
     let prev = 0
     for (let i = 0; i < max_iter; i++) {
-        console.log(i)
         prev = x
         x -= f(0, x) / f_dot(0, x)
         if (Math.abs(x - prev) < tol) {
             return x
         }
         if (isNaN(x)) {
-            return prev
+            return x
         }
     }
     return x

@@ -5,7 +5,7 @@
     <title>Вытекание воды из сосуда</title>
     <link rel="stylesheet" type="text/css" href="./css/jsxgraph.css"/>
     <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css"/>
-    <link rel="stylesheet" tyle="text/css" href="./css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="./css/style.css"/>
     <script type="text/javascript"
             src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
@@ -22,7 +22,7 @@
         </div>
         <div class="col col-3 card p-3">
             <h5>Дифференциальное уравнение:</h5>
-            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="mb-5">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" class="mb-3">
                 <mfrac>
                     <mrow class="MJX-TeXAtom-ORD">
                         <mi>d</mi>
@@ -200,36 +200,30 @@
         <label for="cb10">Метод средней точки</label>
     </div> -->
 </div>
-<div class="col-12 p-3">
-    <div class="col-12 row p-3">
-        <div class="col col-12 custom-paper">
-            <div class="d-flex flex-row justify-content-between align-items-center">
-                <h5 class="m-0 p-0"> Таблица точек </h5>
-                <div class="btn btn-outline-success custom-btn" onclick="update_table()">Обновить</div>
-            </div>
-            <table class="table table-sm" id="table">
-            </table>
+<div class="overflow-auto p-3 animate">
+    <div class="w-auto p-3">
+        <div class="d-flex flex-row justify-content-between align-items-center">
+            <h5 class="m-0 p-0"> Таблица точек </h5>
+            <div class="btn btn-outline-success custom-btn" onclick="update_table()">Обновить</div>
         </div>
+        <table class="table table-sm" id="table">
+        </table>
     </div>
 </div>
 
-<div class="col-12 p-3">
-    <div class="col-12 row p-3">
-        <div class="col col-12 custom-paper">
-            <h5> Таблица относительных ошибок </h5>
-            <table class="table" id="errors">
-            </table>
-        </div>
+<div class="overflow-auto p-3 animate">
+    <div class="w-auto p-3">
+        <h5> Таблица относительных ошибок </h5>
+        <table class="table table-sm" id="errors">
+        </table>
     </div>
 </div>
 
-<div class="col-12 p-3">
-    <div class="col-12 row p-3">
-        <div class="col col-12 custom-paper">
-            <h5> Таблица абсолютных ошибок </h5>
-            <table class="table" id="abs-errors">
-            </table>
-        </div>
+<div class="overflow-auto p-3 animate">
+    <div class="w-auto p-3">
+        <h5> Таблица абсолютных ошибок </h5>
+        <table class="table table-sm" id="abs-errors">
+        </table>
     </div>
 </div>
 
