@@ -13,7 +13,7 @@ let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'w
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'})
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'})
 
-let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "am2", "am3"]
+let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "am3", "am4"]
 
 let graphs = {
     "real":[null, null, true, "z(t)", {
@@ -49,16 +49,16 @@ let graphs = {
         "abs_err":[],
         "err":[]
     }, "darkslateblue", "IMP"],
-    "am2":[null, null, false, "Метод Адамса-Мултона 2", {
-        "data":[],
-        "abs_err":[],
-        "err":[]
-    }, "lime", "AM2"],
     "am3":[null, null, false, "Метод Адамса-Мултона 3", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "black", "AM3"],
+    }, "lime", "AM3"],
+    "am4":[null, null, false, "Метод Адамса-Мултона 4", {
+        "data":[],
+        "abs_err":[],
+        "err":[]
+    }, "black", "AM4"],
 }
 
 // Change XY range
@@ -203,7 +203,7 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
     return data
 }
 
-function solve_adams_moulton_2(x0, I, dt, f) {
+function solve_adams_moulton_3(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
@@ -229,7 +229,7 @@ function solve_adams_moulton_2(x0, I, dt, f) {
     return data
 }
 
-function solve_adams_moulton_3(x0, I, dt, f) {
+function solve_adams_moulton_4(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
@@ -382,10 +382,10 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
         data1 = solve_implicit_euler(x01, I1, h, f1, f1_dot)
     } else if (method === "imp_midpoint") {
         data1 = solve_implicit_midpoint(x01, I1, h, f1, f1_dot)
-    } else if (method === "am2") {
-        data1 = solve_adams_moulton_2(x01, I1, h, f1)
     } else if (method === "am3") {
         data1 = solve_adams_moulton_3(x01, I1, h, f1)
+    } else if (method === "am4") {
+        data1 = solve_adams_moulton_4(x01, I1, h, f1)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -396,7 +396,7 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
 }
 
 // Evaluating methods
-for (let i of ["euler", "midpoint", "ab2", "ab3", "am2", "am3", "imp_euler", "imp_midpoint", "real"]) {
+for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "imp_euler", "imp_midpoint", "real"]) {
     graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
 }
