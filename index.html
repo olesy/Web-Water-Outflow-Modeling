@@ -61,7 +61,7 @@
                 <mi>d</mi>
                 <mi>t</mi>
             </math>
-            <table class="table">
+            <table class="table table-sm">
                 <tr>
                     <td style="color: rgb(214, 52, 52)">Метод Эйлера</td>
                     <td>EU</td>
@@ -85,6 +85,14 @@
                 <tr>
                     <td style="color: darkslateblue;">Неявный метод средней точки</td>
                     <td>IEU</td>
+                </tr>
+                <tr>
+                    <td style="color: lime;">Метод Адамса-Мултона 2</td>
+                    <td>AM2</td>
+                </tr>
+                <tr>
+                    <td style="color: black;">Метод Адамса-Мултона 3</td>
+                    <td>AM3</td>
                 </tr>
             </table>
             <table class="table">
@@ -137,21 +145,21 @@
         <label for="cb1">Метод Эйлера</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb2" checked onchange="update_graph('midpoint',this)">
+        <input type="checkbox" id="cb2" onchange="update_graph('midpoint',this)">
         <label class="label" for="cb2">
             <div class="tick"></div>
         </label>
         <label for="cb2">Метод средней точки</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb3" checked onchange="update_graph('ab2',this)">
+        <input type="checkbox" id="cb3" onchange="update_graph('ab2',this)">
         <label class="label" for="cb3">
             <div class="tick"></div>
         </label>
         <label for="cb3">Метод Адамса-Башфорта 2 порядка</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb4" checked onchange="update_graph('ab3',this)">
+        <input type="checkbox" id="cb4" onchange="update_graph('ab3',this)">
         <label class="label" for="cb4">
             <div class="tick"></div>
         </label>
@@ -165,34 +173,27 @@
         <label for="cb6">Неявный метод Эйлера</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb7" checked onchange="update_graph('imp_midpoint',this)">
+        <input type="checkbox" id="cb7" onchange="update_graph('imp_midpoint',this)">
         <label class="label" for="cb7">
             <div class="tick"></div>
         </label>
         <label for="cb7">Неявный метод средней точки</label>
     </div>
-    <!--<div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb7" checked>
-        <label class="label" for="cb7">
-            <div class="tick"></div>
-        </label>
-        <label for="cb7">Метод средней точки</label>
-    </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb8" checked>
+        <input type="checkbox" id="cb8" onchange="update_graph('am2',this)">
         <label class="label" for="cb8">
             <div class="tick"></div>
         </label>
-        <label for="cb8">Метод средней точки</label>
+        <label for="cb8">Метод Адамса-Мултона 2 порядка</label>
     </div>
     <div class="d-flex align-items-center col-auto p-3">
-        <input type="checkbox" id="cb9" checked>
+        <input type="checkbox" id="cb9" onchange="update_graph('am3',this)">
         <label class="label" for="cb9">
             <div class="tick"></div>
         </label>
-        <label for="cb9">Метод средней точки</label>
+        <label for="cb9">Метод Адамса-Мултона 3 порядка</label>
     </div>
-    <div class="d-flex align-items-center col-auto p-3">
+    <!--<div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb10" checked>
         <label for="cb10" class="label">
             <div class="tick"></div>

@@ -13,7 +13,7 @@ let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'w
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'})
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'})
 
-let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint"]
+let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "am2", "am3"]
 
 let graphs = {
     "real":[null, null, true, "z(t)", {
@@ -24,17 +24,17 @@ let graphs = {
         "abs_err":[],
         "err":[]
     }, "red", "EU"],
-    "midpoint":[null, null, true, "Метод средней точки", {
+    "midpoint":[null, null, false, "Метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
     }, "green", "MP"],
-    "ab2":[null, null, true, "Метод Адамса-Башфорта 2", {
+    "ab2":[null, null, false, "Метод Адамса-Башфорта 2", {
         "data":[],
         "abs_err":[],
         "err":[]
     }, "darkorange", "AB2"],
-    "ab3":[null, null, true, "Метод Адамса-Башфорта 3", {
+    "ab3":[null, null, false, "Метод Адамса-Башфорта 3", {
         "data":[],
         "abs_err":[],
         "err":[]
@@ -44,11 +44,21 @@ let graphs = {
         "abs_err":[],
         "err":[]
     }, "saddlebrown", "IEU"],
-    "imp_midpoint":[null, null, true, "Неявный метод средней точки", {
+    "imp_midpoint":[null, null, false, "Неявный метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
     }, "darkslateblue", "IMP"],
+    "am2":[null, null, false, "Метод Адамса-Мултона 2", {
+        "data":[],
+        "abs_err":[],
+        "err":[]
+    }, "lime", "AM2"],
+    "am3":[null, null, false, "Метод Адамса-Мултона 3", {
+        "data":[],
+        "abs_err":[],
+        "err":[]
+    }, "black", "AM3"],
 }
 
 // Change XY range
@@ -193,6 +203,59 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
     return data
 }
 
+function solve_adams_moulton_2(x0, I, dt, f) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    for (let i = 1; i < N; ++i) {
+        if (i < 2) {
+            // RK4 for 1st iteration
+            let k1 = f(0, data[i - 1][0])
+            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
+            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
+            let k4 = f(0, data[i - 1][0] + dt * k3)
+            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+            data.push([dx_dt])
+        } else {
+            // predictor - AB2
+            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
+            let f_new = f(0, dx_dt)
+            // corrector (optimized)
+            dx_dt = dx_dt + dt * 5 / 12 * (f_new - 2 * f(0, data[i - 1][0]) + 1 * f(0, data[i - 2][0]))
+            if (dx_dt < 0)
+                dx_dt = NaN
+            data.push([dx_dt])
+        }
+    }
+    return data
+}
+
+function solve_adams_moulton_3(x0, I, dt, f) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    for (let i = 1; i < N; ++i) {
+        if (i < 3) {
+            // RK4 for 1st and 2nd iteration
+            let k1 = f(0, data[i - 1][0])
+            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
+            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
+            let k4 = f(0, data[i - 1][0] + dt * k3)
+            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+            data.push([dx_dt])
+        } else {
+            // predictor - AB3
+            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
+                + 5 / 12 * f(0, data[i - 3][0]))
+            let f_new = f(0, dx_dt)
+            // corrector (optimized)
+            dx_dt = dx_dt + dt * 3 / 8 * (f_new - 3 * f(0, data[i - 1][0]) + 3 * f(0, data[i - 2][0]) - f(0, data[i - 3][0]))
+            if (dx_dt < 0)
+                dx_dt = NaN
+            data.push([dx_dt])
+        }
+    }
+    return data
+}
+
 // Midpoint method function
 function solve_midpoint(x0, I, dt, f) {
     let data = [x0]
@@ -319,6 +382,10 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
         data1 = solve_implicit_euler(x01, I1, h, f1, f1_dot)
     } else if (method === "imp_midpoint") {
         data1 = solve_implicit_midpoint(x01, I1, h, f1, f1_dot)
+    } else if (method === "am2") {
+        data1 = solve_adams_moulton_2(x01, I1, h, f1)
+    } else if (method === "am3") {
+        data1 = solve_adams_moulton_3(x01, I1, h, f1)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -329,7 +396,7 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
 }
 
 // Evaluating methods
-for (let i of ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "real"]) {
+for (let i of ["euler", "midpoint", "ab2", "ab3", "am2", "am3", "imp_euler", "imp_midpoint", "real"]) {
     graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
 }
@@ -362,4 +429,8 @@ for (let elem in graphs) {
             strokeColor:graphs[elem][5],
             fillColor:graphs[elem][5]
         })
+    if (graphs[elem][2] === false) {
+        graphs[elem][1].hideElement()
+        graphs[elem][0].hideElement()
+    }
 }
