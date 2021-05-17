@@ -18,47 +18,47 @@ let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "
 let graphs = {
     "real":[null, null, true, "z(t)", {
         "data":[],
-    }, "blue", "Z"],
+    }, "blue", "Z", null],
     "euler":[null, null, true, "Метод Эйлера", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "red", "EU"],
+    }, "red", "EU", null],
     "midpoint":[null, null, false, "Метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "green", "MP"],
+    }, "green", "MP", null],
     "ab2":[null, null, false, "Метод Адамса-Башфорта 2", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "darkorange", "AB2"],
+    }, "darkorange", "AB2", null],
     "ab3":[null, null, false, "Метод Адамса-Башфорта 3", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "hotpink", "AB3"],
+    }, "hotpink", "AB3", null],
     "imp_euler":[null, null, true, "Неявный метод Эйлера", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "saddlebrown", "IEU"],
+    }, "saddlebrown", "IEU", null],
     "imp_midpoint":[null, null, false, "Неявный метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "darkslateblue", "IMP"],
+    }, "darkslateblue", "IMP", null],
     "am3":[null, null, false, "Метод Адамса-Мултона 3", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "lime", "AM3"],
+    }, "lime", "AM3", null],
     "am4":[null, null, false, "Метод Адамса-Мултона 4", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "black", "AM4"],
+    }, "black", "AM4", null],
 }
 
 // Change XY range
@@ -75,10 +75,12 @@ function update_graph(name, element) {
     if (element.checked) {
         objects[0].showElement()
         objects[1].showElement()
+        objects[7].showElement()
         objects[2] = true
     } else {
         objects[0].hideElement()
         objects[1].hideElement()
+        objects[7].hideElement()
         objects[2] = false
     }
     update_table()
@@ -114,8 +116,8 @@ function update_table() {
         for (let j of methods) {
             if (graphs[j][2]) {
                 output += "<td>" + graphs[j][4].data[i][0].toString() + "</td>"
-                errors += "<td>" + (Math.abs(graphs[j][4].data[i][0] - real) / real).toString() + "</td>"
-                abs_errors += "<td>" + (Math.abs(graphs[j][4].data[i][0] - real)).toString() + "</td>"
+                errors += "<td>" + graphs[j][4].err[i].toString() + "</td>"
+                abs_errors += "<td>" + graphs[j][4].abs_err[i].toString() + "</td>"
             }
         }
         output += "</tr>"
@@ -160,13 +162,17 @@ function solve_adams_bashforth_2(x0, I, dt, f) {
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
         if (i === 1) {
-            // RK4 for 1st iteration
-            let k1 = f(0, data[i - 1][0])
-            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
-            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
-            let k4 = f(0, data[i - 1][0] + dt * k3)
-            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-            data.push([dx_dt])
+            // RK4 for 1st iteration (10 steps)
+            let data_temp = [...data]
+            for (let j = 1; j <= 10; j++) {
+                let k1 = f(0, data_temp[j - 1][0])
+                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
+                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
+                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
+                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+                data_temp.push([dx_dt])
+            }
+            data.push(data_temp[data_temp.length - 1])
         } else {
             // Adams Bashforth, k=2
             let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
@@ -184,13 +190,17 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
         if (i < 3) {
-            // RK4 for 1st & 2nd iteration
-            let k1 = f(0, data[i - 1][0])
-            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
-            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
-            let k4 = f(0, data[i - 1][0] + dt * k3)
-            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-            data.push([dx_dt])
+            // RK4 for 1st & 2nd iteration (20 steps)
+            let data_temp = [...data]
+            for (let j = i; j <= i + 9; j++) {
+                let k1 = f(0, data_temp[j - 1][0])
+                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
+                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
+                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
+                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+                data_temp.push([dx_dt])
+            }
+            data.push(data_temp[data_temp.length - 1])
         } else {
             // Adams Bashforth, k=3
             let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
@@ -209,12 +219,16 @@ function solve_adams_moulton_3(x0, I, dt, f) {
     for (let i = 1; i < N; ++i) {
         if (i < 2) {
             // RK4 for 1st iteration
-            let k1 = f(0, data[i - 1][0])
-            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
-            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
-            let k4 = f(0, data[i - 1][0] + dt * k3)
-            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-            data.push([dx_dt])
+            let data_temp = [...data]
+            for (let j = 1; j <= 10; j++) {
+                let k1 = f(0, data_temp[j - 1][0])
+                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
+                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
+                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
+                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+                data_temp.push([dx_dt])
+            }
+            data.push(data_temp[data_temp.length - 1])
         } else {
             // predictor - AB2
             let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
@@ -235,12 +249,16 @@ function solve_adams_moulton_4(x0, I, dt, f) {
     for (let i = 1; i < N; ++i) {
         if (i < 3) {
             // RK4 for 1st and 2nd iteration
-            let k1 = f(0, data[i - 1][0])
-            let k2 = f(0, data[i - 1][0] + dt / 2 * k1)
-            let k3 = f(0, data[i - 1][0] + dt / 2 * k2)
-            let k4 = f(0, data[i - 1][0] + dt * k3)
-            let dx_dt = data[i - 1][0] + dt * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-            data.push([dx_dt])
+            let data_temp = [...data]
+            for (let j = i; j <= i + 9; j++) {
+                let k1 = f(0, data_temp[j - 1][0])
+                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
+                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
+                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
+                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+                data_temp.push([dx_dt])
+            }
+            data.push(data_temp[data_temp.length - 1])
         } else {
             // predictor - AB3
             let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
@@ -341,7 +359,7 @@ function solve_implicit_midpoint(x0, I, dt, f, f_dot) {
 
 // Universal ODE solver (any method)
 function ode_diff_water(method = "real", R, a, h, height, update) {
-    let I1 = [0, 13]
+    let I1 = [0, 17]
     if (h <= 0) h = 1
     if (a > R) a = R
     if (a <= 0) a = 1
@@ -395,10 +413,24 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
     return data1
 }
 
+function compute_errors(i) {
+    graphs[i][4].err = []
+    graphs[i][4].abs_err = []
+    for (let j = 0; j < graphs[i][4].data.length; j++) {
+        let real = f_real(graphs[i][4].data[j][1], parseFloat(R_slider.Value()),
+            parseFloat(a_slider.Value()), startZ.Y())
+        graphs[i][4].err.push(Math.abs(graphs[i][4].data[j][0] - real) / real)
+        graphs[i][4].abs_err.push(Math.abs(graphs[i][4].data[j][0] - real))
+    }
+}
+
 // Evaluating methods
 for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "imp_euler", "imp_midpoint", "real"]) {
     graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+    if (i !== "real") {
+        compute_errors(i)
+    }
 }
 
 update_table()
@@ -408,14 +440,18 @@ update_table()
 for (let elem in graphs) {
     let data = []
     let t = []
+    let err = []
     for (let i = 0; i < graphs[elem][4].data.length; i++) {
         data[i] = graphs[elem][4].data[i][0]
+        if (elem !== "real")
+            err[i] = graphs[elem][4].err[i]
         t[i] = graphs[elem][4].data[i][1]
     }
     graphs[elem][0] = board.create('curve', [t, data], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
     graphs[elem][0].updateDataArray = function () {
         graphs[elem][4].data = ode_diff_water(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
             parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+        elem !== "real" && compute_errors(elem)
         this.dataX = []
         this.dataY = []
         for (let i = 0; i < graphs[elem][4].data.length; i++) {
@@ -429,8 +465,24 @@ for (let elem in graphs) {
             strokeColor:graphs[elem][5],
             fillColor:graphs[elem][5]
         })
+    if (elem !== "real") {
+        graphs[elem][7] = board.create('curve', [t, err], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
+        graphs[elem][7].updateDataArray = function () {
+            graphs[elem][4].data = ode_diff_water(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+                parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+            compute_errors(elem)
+            this.dataX = []
+            this.dataY = []
+            for (let i = 0; i < graphs[elem][4].data.length; i++) {
+                this.dataX[i] = graphs[elem][4].data[i][1]
+                this.dataY[i] = graphs[elem][4].err[i]
+            }
+        }
+    }
     if (graphs[elem][2] === false) {
         graphs[elem][1].hideElement()
         graphs[elem][0].hideElement()
+        graphs[elem][7].hideElement()
     }
+
 }
