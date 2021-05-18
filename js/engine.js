@@ -216,6 +216,7 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
 function solve_adams_moulton_3(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
+    let f_arr = [f(0, x0)]
     for (let i = 1; i < N; ++i) {
         if (i < 2) {
             // RK4 for 1st iteration
@@ -229,12 +230,13 @@ function solve_adams_moulton_3(x0, I, dt, f) {
                 data_temp.push([dx_dt])
             }
             data.push(data_temp[data_temp.length - 1])
+            f_arr.push(f(0, data[i]))
         } else {
             // predictor - AB2
-            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
-            let f_new = f(0, dx_dt)
+            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f_arr[i - 1] - 1 / 2 * f_arr[i - 2])
+            f_arr.push(f(0, dx_dt))
             // corrector (optimized)
-            dx_dt = dx_dt + dt * 5 / 12 * (f_new - 2 * f(0, data[i - 1][0]) + 1 * f(0, data[i - 2][0]))
+            dx_dt = dx_dt + dt * 5 / 12 * (f_arr[i] - 2 * f_arr[i - 1] + 1 * f_arr[i - 2])
             if (dx_dt < 0)
                 dx_dt = NaN
             data.push([dx_dt])
@@ -246,6 +248,7 @@ function solve_adams_moulton_3(x0, I, dt, f) {
 function solve_adams_moulton_4(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
+    let f_arr = [f(0, x0)]
     for (let i = 1; i < N; ++i) {
         if (i < 3) {
             // RK4 for 1st and 2nd iteration
@@ -259,13 +262,14 @@ function solve_adams_moulton_4(x0, I, dt, f) {
                 data_temp.push([dx_dt])
             }
             data.push(data_temp[data_temp.length - 1])
+            f_arr.push(f(0, data[i]))
         } else {
             // predictor - AB3
-            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
-                + 5 / 12 * f(0, data[i - 3][0]))
-            let f_new = f(0, dx_dt)
+            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f_arr[i - 1] - 4 / 3 * f_arr[i - 2]
+                + 5 / 12 * f_arr[i - 3])
+            f_arr.push(f(0, dx_dt))
             // corrector (optimized)
-            dx_dt = dx_dt + dt * 3 / 8 * (f_new - 3 * f(0, data[i - 1][0]) + 3 * f(0, data[i - 2][0]) - f(0, data[i - 3][0]))
+            dx_dt = dx_dt + dt * 3 / 8 * (f_arr[i] - 3 * f_arr[i - 1] + 3 * f_arr[i - 2] - f_arr[i - 3])
             if (dx_dt < 0)
                 dx_dt = NaN
             data.push([dx_dt])
