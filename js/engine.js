@@ -213,6 +213,7 @@ function solve_adams_bashforth_3(x0, I, dt, f) {
     return data
 }
 
+// Adams-Moulton 3 method function
 function solve_adams_moulton_3(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
@@ -245,6 +246,7 @@ function solve_adams_moulton_3(x0, I, dt, f) {
     return data
 }
 
+// Adams-Moulton 4 method function
 function solve_adams_moulton_4(x0, I, dt, f) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
