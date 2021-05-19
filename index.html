@@ -131,6 +131,22 @@
 </div>
 <div class="div d-flex row p-3 col-12">
     <div class="d-flex align-items-center col-auto p-3">
+        <input type="checkbox" id="cb12" checked onchange="switch_graphs(0, this)">
+        <label class="label" for="cb12">
+            <div class="tick"></div>
+        </label>
+        <label for="cb12">Графики функций</label>
+    </div>
+    <div class="d-flex align-items-center col-auto p-3">
+        <input type="checkbox" id="cb13" checked onchange="switch_graphs(1, this)">
+        <label class="label" for="cb13">
+            <div class="tick"></div>
+        </label>
+        <label for="cb13">Графики относительных ошибок</label>
+    </div>
+</div>
+<div class="div d-flex row p-3 col-12">
+    <div class="d-flex align-items-center col-auto p-3">
         <input type="checkbox" id="cb0" checked onchange="update_graph('real',this)">
         <label class="label" for="cb0">
             <div class="tick"></div>

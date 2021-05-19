@@ -18,47 +18,47 @@ let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "
 let graphs = {
     "real":[null, null, true, "z(t)", {
         "data":[],
-    }, "blue", "Z", null],
+    }, "blue", "Z"],
     "euler":[null, null, true, "Метод Эйлера", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "red", "EU", null],
+    }, "red", "EU", null, null],
     "midpoint":[null, null, false, "Метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "green", "MP", null],
+    }, "green", "MP", null, null],
     "ab2":[null, null, false, "Метод Адамса-Башфорта 2", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "darkorange", "AB2", null],
+    }, "darkorange", "AB2", null, null],
     "ab3":[null, null, false, "Метод Адамса-Башфорта 3", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "hotpink", "AB3", null],
+    }, "hotpink", "AB3", null, null],
     "imp_euler":[null, null, true, "Неявный метод Эйлера", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "saddlebrown", "IEU", null],
+    }, "saddlebrown", "IEU", null, null],
     "imp_midpoint":[null, null, false, "Неявный метод средней точки", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "darkslateblue", "IMP", null],
+    }, "darkslateblue", "IMP", null, null],
     "am3":[null, null, false, "Метод Адамса-Мултона 3", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "lime", "AM3", null],
+    }, "lime", "AM3", null, null],
     "am4":[null, null, false, "Метод Адамса-Мултона 4", {
         "data":[],
         "abs_err":[],
         "err":[]
-    }, "black", "AM4", null],
+    }, "black", "AM4", null, null],
 }
 
 // Change XY range
@@ -69,21 +69,48 @@ function update_range() {
     board.update()
 }
 
-// Hide/show method
+// Hide/show methods
 function update_graph(name, element) {
     let objects = graphs[name]
     if (element.checked) {
         objects[0].showElement()
         objects[1].showElement()
         objects[7].showElement()
+        objects[8].showElement()
         objects[2] = true
     } else {
         objects[0].hideElement()
         objects[1].hideElement()
         objects[7].hideElement()
+        objects[8].hideElement()
         objects[2] = false
     }
     update_table()
+}
+
+function switch_graphs(type, element) {
+    for (let elem in graphs) {
+        if (element.checked) {
+            if (graphs[elem][2] === true) {
+                if (type === 0) {
+                    graphs[elem][0].showElement()
+                    graphs[elem][1].showElement()
+                } else if (elem !== "real") {
+                    graphs[elem][7].showElement()
+                    graphs[elem][8].showElement()
+                }
+            }
+        } else {
+            if (type === 0) {
+                graphs[elem][0].hideElement()
+                graphs[elem][1].hideElement()
+            } else if (elem !== "real") {
+                graphs[elem][7].hideElement()
+                graphs[elem][8].hideElement()
+            }
+        }
+    }
+
 }
 
 // Write to HTML table methods points data, errors
@@ -484,11 +511,18 @@ for (let elem in graphs) {
                 this.dataY[i] = graphs[elem][4].err[i]
             }
         }
+        graphs[elem][8] = board.create('glider', [graphs[elem][7]],
+            {
+                name:graphs[elem][6],
+                strokeColor:graphs[elem][5],
+                fillColor:graphs[elem][5]
+            })
     }
     if (graphs[elem][2] === false) {
         graphs[elem][1].hideElement()
         graphs[elem][0].hideElement()
         graphs[elem][7].hideElement()
+        graphs[elem][8].hideElement()
     }
 
 }
