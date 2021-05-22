@@ -13,7 +13,7 @@ let R_slider = board.create('input', [-1, 10, '1.00', 'Input R: '], {cssStyle:'w
 let a_slider = board.create('input', [-1, 8, '0.70', 'Input a: '], {cssStyle:'width: 100px'})
 let h_slider = board.create('input', [-1, 6, '0.40', 'Input h: '], {cssStyle:'width: 100px'})
 
-let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "am3", "am4"]
+let methods = ["euler", "midpoint", "ab2", "ab3", "imp_euler", "imp_midpoint", "am3", "am4", "bsh"]
 
 let graphs = {
     "real":[null, null, true, "z(t)", {
@@ -59,6 +59,11 @@ let graphs = {
         "abs_err":[],
         "err":[]
     }, "black", "AM4", null, null],
+    "bsh":[null, null, false, "Метод Богацкого-Шампина", {
+        "data":[],
+        "abs_err":[],
+        "err":[]
+    }, "red", "BSH", null, null],
 }
 
 // Change XY range
@@ -120,6 +125,11 @@ function update_table() {
     let errors = output
     for (let elem in graphs) {
         if (graphs[elem][2]) {
+            if (elem === "bsh") {
+                output += "<th> t (Адаптивный шаг) </th>"
+                abs_errors += "<th> t (Адаптивный шаг)</th>"
+                errors += "<th> t (Адаптивный шаг)</th>"
+            }
             output += "<th>" + graphs[elem][3] + "</th>"
             if (elem !== "real") {
                 abs_errors += "<th>" + graphs[elem][3] + "</th>"
@@ -128,8 +138,8 @@ function update_table() {
         }
     }
     let real = 0
-    for (let i = 0; i < graphs.euler[4].data.length; i++) {
-        if (isNaN(graphs.imp_euler[4].data[i][0])) break
+    for (let i = 0; i < graphs.bsh[4].data.length; i++) {
+        if (isNaN(graphs.bsh[4].data[i][0])) break
         real = f_real(graphs.midpoint[4].data[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y())
         output += "<tr><td>" +
             graphs.euler[4].data[i][1].toFixed(2) + "</td>"
@@ -142,6 +152,11 @@ function update_table() {
         }
         for (let j of methods) {
             if (graphs[j][2]) {
+                if (j === "bsh") {
+                    output += "<td>" + graphs[j][4].data[i][1].toString() + "</td>"
+                    errors += "<td>" + graphs[j][4].data[i][1].toString() + "</td>"
+                    abs_errors += "<td>" + graphs[j][4].data[i][1].toString() + "</td>"
+                }
                 output += "<td>" + graphs[j][4].data[i][0].toString() + "</td>"
                 errors += "<td>" + graphs[j][4].err[i].toString() + "</td>"
                 abs_errors += "<td>" + graphs[j][4].abs_err[i].toString() + "</td>"
@@ -179,6 +194,37 @@ function solve_euler(x0, I, dt, f) {
     for (let i = 1; i < N; ++i) {
         let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1])[0]
         data.push([dx_dt])
+    }
+    return data
+}
+
+// Midpoint method function
+function solve_midpoint(x0, I, dt, f) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    for (let i = 1; i < N; ++i) {
+        let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1][0] + dt / 2 * f(0, data[i - 1][0]))
+        data.push([dx_dt])
+    }
+    return data
+}
+
+function solve_bogacki_shampine(x0, I, dt, f, tol) {
+    let data = [[x0[0], 0]]
+    let h = dt
+    let x = 0.0
+    let i = 1
+    while (x <= I[1]) {
+        let k1 = f(0, data[i - 1][0])
+        let k2 = f(0, data[i - 1][0] + 1 / 2 * h * k1)
+        let k3 = f(0, data[i - 1][0] + 3 / 4 * h * k2)
+        let dx_dt = data[i - 1][0] + 2 / 9 * h * k1 + 1 / 3 * h * k2 + 4 / 9 * h * k3
+        let k4 = f(0, dx_dt)
+        let dx_dt_hat = data[i - 1][0] + 7 / 24 * h * k1 + 1 / 4 * h * k2 + 1 / 3 * h * k3 + 1 / 8 * h * k4
+        x += h
+        data.push([dx_dt, x])
+        h *= Math.pow(1 / Math.sqrt((dx_dt_hat - dx_dt) / tol), 1 / 4)
+        i += 1
     }
     return data
 }
@@ -307,17 +353,6 @@ function solve_adams_moulton_4(x0, I, dt, f) {
     return data
 }
 
-// Midpoint method function
-function solve_midpoint(x0, I, dt, f) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    for (let i = 1; i < N; ++i) {
-        let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1][0] + dt / 2 * f(0, data[i - 1][0]))
-        data.push([dx_dt])
-    }
-    return data
-}
-
 // Root function x(t)
 let f_real = function (t1, R, a, height) {
     let g = 9.80665
@@ -437,6 +472,8 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
         data1 = solve_adams_moulton_3(x01, I1, h, f1)
     } else if (method === "am4") {
         data1 = solve_adams_moulton_4(x01, I1, h, f1)
+    } else if (method === "bsh") {
+        data1 = solve_bogacki_shampine(x01, I1, h, f1, 1e-5)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -458,7 +495,7 @@ function compute_errors(i) {
 }
 
 // Evaluating methods
-for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "imp_euler", "imp_midpoint", "real"]) {
+for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "bsh", "imp_euler", "imp_midpoint", "real"]) {
     graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
     if (i !== "real") {
