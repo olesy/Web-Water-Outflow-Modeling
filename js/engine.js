@@ -187,168 +187,236 @@ startZ = board.createElement('glider', [0, 10, board.defaultAxes.y], {
     fillColor:'blue'
 })
 
-// Euler method function
-function solve_euler(x0, I, dt, f) {
+// f(t)
+let func = function (t1, x1, param) {
+    let g = 9.80665
+    let y1 = []
+    y1[0] = -(param[0] * param[0]) / (param[1] * param[1]) * Math.sqrt(2 * g * x1)
+    return y1
+}
+
+
+// f_dot(t)
+let func_dot = function (t1, x1, param) {
+    let g = 9.80665
+    let y1 = []
+    y1[0] = -(param[0] * param[0]) / (2 * param[1] * param[1] * Math.sqrt(x1)) * Math.sqrt(2 * g)
+    return y1
+}
+
+
+// ONE STEP METHODS
+
+// Euler method step function
+function euler_step(prev, dt, f) {
+    let dx_dt = prev[0] + dt * f(0, prev)[0]
+    return [dx_dt]
+}
+
+// Midpoint method step function
+function midpoint_step(prev, dt, f) {
+    let dx_dt = prev[0] + dt * f(0, prev[0] + dt / 2 * f(0, prev[0]))
+    return [dx_dt]
+}
+
+// One step function (saves data to array)
+function solve_one_step(x0, I, dt, f, f_step) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
-        let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1])[0]
-        data.push([dx_dt])
+        data.push(f_step(data[i - 1], dt, f)) // just saving all data to array (can be changed)
     }
     return data
 }
 
-// Midpoint method function
-function solve_midpoint(x0, I, dt, f) {
+
+// ONE STEP IMPLICIT METHODS
+
+// Newton method
+function solve_newton(x0, f, f_dot, tol = 1.0e-9) {
+    let max_iter = 50
+    let x = x0
+    let prev = 0
+    for (let i = 0; i < max_iter; i++) {
+        prev = x
+        x -= f(0, x) / f_dot(0, x)
+        if (Math.abs(x - prev) < tol) {
+            return x
+        }
+        if (isNaN(x)) {
+            return x
+        }
+    }
+    return x
+}
+
+// Implicit Euler method step function
+function euler_implicit_step(prev, dt, f, f_dot) {
+    let exp_dot = function (t1, x1) {
+        return dt * f_dot(t1, x1) - 1
+    }
+    let exp = function (t1, x1) {
+        return (prev[0] + dt * f(t1, x1) - x1)
+    }
+    return [solve_newton(prev[0], exp, exp_dot)]
+}
+
+// Implicit midpoint method step function
+function midpoint_implicit_step(prev, dt, f, f_dot) {
+    let exp = function (t1, x1) {
+        return f(t1, x1 * dt / 2 + prev[0]) - x1
+    }
+    let exp_dot = function (t1, x1) {
+        return f_dot(t1, x1 * dt / 2 + prev[0]) - 1
+    }
+    let k1 = f(0, prev[0])
+    return [prev[0] + dt * solve_newton(k1, exp, exp_dot)]
+}
+
+// One step implicit function (saves data to array)
+function solve_implicit_one_step(x0, I, dt, f, f_dot, f_step) {
     let data = [x0]
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
-        let dx_dt = data[i - 1][0] + dt * f(0, data[i - 1][0] + dt / 2 * f(0, data[i - 1][0]))
-        data.push([dx_dt])
+        data.push(f_step(data[i - 1], dt, f, f_dot))
     }
     return data
 }
 
-function solve_bogacki_shampine(x0, I, dt, f, tol) {
+
+// MULTI STEP METHODS
+
+// RK4 step for AB methods
+function rk4_step(prev, dt, f) {
+    let k1 = f(0, prev[0])
+    let k2 = f(0, prev[0] + dt / 10 / 2 * k1)
+    let k3 = f(0, prev[0] + dt / 10 / 2 * k2)
+    let k4 = f(0, prev[0] + dt / 10 * k3)
+    let dx_dt = prev[0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
+    return [dx_dt]
+}
+
+// Adams-Bashforth 2 step function
+function adams_bashforth_2_step(prev, dt, f) {
+    let i = prev.length
+    let dx_dt = prev[i - 1][0] + dt * (3 / 2 * f(0, prev[i - 1][0]) - 1 / 2 * f(0, prev[i - 2][0]))
+    if (dx_dt > prev[i - 1][0])
+        return [NaN]
+    else
+        return [dx_dt]
+}
+
+// Adams-Bashforth 3 step function
+function adams_bashforth_3_step(prev, dt, f) {
+    let i = prev.length
+    let dx_dt = prev[i - 1][0] + dt * (23 / 12 * f(0, prev[i - 1][0]) - 4 / 3 * f(0, prev[i - 2][0])
+        + 5 / 12 * f(0, prev[i - 3][0]))
+    if (dx_dt > prev[i - 1][0])
+        return [NaN]
+    else
+        return [dx_dt]
+}
+
+// Multi step methods function (saves data to array)
+function solve_multi_step(x0, I, dt, f, one_step, f_step, n) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    for (let i = 1; i < N; ++i) {
+        if (i < n) {
+            // One step method for 1st iteration (10 steps)
+            let data_temp = [...data]
+            for (let j = 1; j <= 10; j++) {
+                data_temp.push(one_step(data_temp[i + j - 2], dt, f))
+            }
+            data.push(data_temp[data_temp.length - 1])
+        } else {
+            // Multi step method
+            data.push(f_step(data, dt, f)) // You can send only last n values as prev
+        }
+    }
+    return data
+}
+
+
+// MULTI STEP IMPLICIT METHODS
+
+// Adams-Moulton 3 step function
+function adams_moulton_3_step(prev, prev_f, dt, f) {
+    let i = prev_f.length
+    // predictor - AB2
+    let dx_dt = prev[0] + dt * (3 / 2 * prev_f[i - 1] - 1 / 2 * prev_f[i - 2])
+    let next_f = f(0, dx_dt)
+    // corrector (optimized)
+    dx_dt = dx_dt + dt * 5 / 12 * (next_f - 2 * prev_f[i - 1] + 1 * prev_f[i - 2])
+    if (dx_dt < 0)
+        dx_dt = NaN
+    return [[dx_dt], next_f]
+}
+
+// Adams-Moulton 4 step function
+function adams_moulton_4_step(prev, prev_f, dt, f) {
+    let i = prev_f.length
+    let dx_dt = prev[0] + dt * (23 / 12 * prev_f[i - 1] - 4 / 3 * prev_f[i - 2]
+        + 5 / 12 * prev_f[i - 3])
+    let next_f = f(0, dx_dt)
+    // corrector (optimized)
+    dx_dt = dx_dt + dt * 3 / 8 * (next_f - 3 * prev_f[i - 1] + 3 * prev_f[i - 2] - prev_f[i - 3])
+    if (dx_dt < 0)
+        dx_dt = NaN
+    return [[dx_dt], next_f]
+}
+
+// Multi step implicit methods function (saves data to array)
+function solve_multi_step_implicit(x0, I, dt, f, one_step, f_step, n) {
+    let data = [x0]
+    let N = (I[1] - I[0]) / dt
+    let f_arr = [f(0, x0)]
+    for (let i = 1; i < N; ++i) {
+        if (i < n) {
+            // RK4 for 1st iteration
+            let data_temp = [...data]
+            for (let j = 1; j <= 10; j++) {
+                data_temp.push(one_step(data_temp[i + j - 2], dt, f))
+            }
+            data.push(data_temp[data_temp.length - 1])
+            f_arr.push(f(0, data[i]))
+        } else {
+            let res = f_step(data[i - 1], f_arr, dt, f) // You can send only last n values as prev_f
+            data.push(res[0])
+            f_arr.push(res[1])
+        }
+    }
+    return data
+}
+
+
+// ONE STEP ADAPTIVE METHODS
+
+// Bogacki Shampine step function
+function bogacki_shampine_step(prev, h, f, tol, x) {
+    let k1 = f(0, prev[0])
+    let k2 = f(0, prev[0] + 1 / 2 * h * k1)
+    let k3 = f(0, prev[0] + 3 / 4 * h * k2)
+    let dx_dt = prev[0] + 2 / 9 * h * k1 + 1 / 3 * h * k2 + 4 / 9 * h * k3
+    let k4 = f(0, dx_dt)
+    let dx_dt_hat = prev[0] + 7 / 24 * h * k1 + 1 / 4 * h * k2 + 1 / 3 * h * k3 + 1 / 8 * h * k4
+    x += h
+    h *= Math.pow(1 / Math.sqrt((dx_dt_hat - dx_dt) / tol), 1 / 4)
+    return [[dx_dt, x], h]
+}
+
+// One step adaptive methods function (saves data to array)
+function solve_one_step_adaptive(x0, I, dt, f, tol, f_step) {
     let data = [[x0[0], 0]]
     let h = dt
     let x = 0.0
     let i = 1
     while (x <= I[1]) {
-        let k1 = f(0, data[i - 1][0])
-        let k2 = f(0, data[i - 1][0] + 1 / 2 * h * k1)
-        let k3 = f(0, data[i - 1][0] + 3 / 4 * h * k2)
-        let dx_dt = data[i - 1][0] + 2 / 9 * h * k1 + 1 / 3 * h * k2 + 4 / 9 * h * k3
-        let k4 = f(0, dx_dt)
-        let dx_dt_hat = data[i - 1][0] + 7 / 24 * h * k1 + 1 / 4 * h * k2 + 1 / 3 * h * k3 + 1 / 8 * h * k4
-        x += h
-        data.push([dx_dt, x])
-        h *= Math.pow(1 / Math.sqrt((dx_dt_hat - dx_dt) / tol), 1 / 4)
+        let res = f_step(data[i - 1], h, f, tol, x)
+        data.push(res[0])
+        x = res[0][1]
+        h = res[1]
         i += 1
-    }
-    return data
-}
-
-// Adams-Bashforth 2 method function
-function solve_adams_bashforth_2(x0, I, dt, f) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    for (let i = 1; i < N; ++i) {
-        if (i === 1) {
-            // RK4 for 1st iteration (10 steps)
-            let data_temp = [...data]
-            for (let j = 1; j <= 10; j++) {
-                let k1 = f(0, data_temp[j - 1][0])
-                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
-                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
-                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
-                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-                data_temp.push([dx_dt])
-            }
-            data.push(data_temp[data_temp.length - 1])
-        } else {
-            // Adams Bashforth, k=2
-            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f(0, data[i - 1][0]) - 1 / 2 * f(0, data[i - 2][0]))
-            if (dx_dt > data[i - 1][0])
-                data.push([NaN])
-            data.push([dx_dt])
-        }
-    }
-    return data
-}
-
-// Adams-Bashforth 3 method function
-function solve_adams_bashforth_3(x0, I, dt, f) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    for (let i = 1; i < N; ++i) {
-        if (i < 3) {
-            // RK4 for 1st & 2nd iteration (20 steps)
-            let data_temp = [...data]
-            for (let j = i; j <= i + 9; j++) {
-                let k1 = f(0, data_temp[j - 1][0])
-                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
-                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
-                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
-                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-                data_temp.push([dx_dt])
-            }
-            data.push(data_temp[data_temp.length - 1])
-        } else {
-            // Adams Bashforth, k=3
-            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f(0, data[i - 1][0]) - 4 / 3 * f(0, data[i - 2][0])
-                + 5 / 12 * f(0, data[i - 3][0]))
-            if (dx_dt > data[i - 1][0])
-                data.push([NaN])
-            data.push([dx_dt])
-        }
-    }
-    return data
-}
-
-// Adams-Moulton 3 method function
-function solve_adams_moulton_3(x0, I, dt, f) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    let f_arr = [f(0, x0)]
-    for (let i = 1; i < N; ++i) {
-        if (i < 2) {
-            // RK4 for 1st iteration
-            let data_temp = [...data]
-            for (let j = 1; j <= 10; j++) {
-                let k1 = f(0, data_temp[j - 1][0])
-                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
-                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
-                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
-                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-                data_temp.push([dx_dt])
-            }
-            data.push(data_temp[data_temp.length - 1])
-            f_arr.push(f(0, data[i]))
-        } else {
-            // predictor - AB2
-            let dx_dt = data[i - 1][0] + dt * (3 / 2 * f_arr[i - 1] - 1 / 2 * f_arr[i - 2])
-            f_arr.push(f(0, dx_dt))
-            // corrector (optimized)
-            dx_dt = dx_dt + dt * 5 / 12 * (f_arr[i] - 2 * f_arr[i - 1] + 1 * f_arr[i - 2])
-            if (dx_dt < 0)
-                dx_dt = NaN
-            data.push([dx_dt])
-        }
-    }
-    return data
-}
-
-// Adams-Moulton 4 method function
-function solve_adams_moulton_4(x0, I, dt, f) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    let f_arr = [f(0, x0)]
-    for (let i = 1; i < N; ++i) {
-        if (i < 3) {
-            // RK4 for 1st and 2nd iteration
-            let data_temp = [...data]
-            for (let j = i; j <= i + 9; j++) {
-                let k1 = f(0, data_temp[j - 1][0])
-                let k2 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k1)
-                let k3 = f(0, data_temp[j - 1][0] + dt / 10 / 2 * k2)
-                let k4 = f(0, data_temp[j - 1][0] + dt / 10 * k3)
-                let dx_dt = data_temp[j - 1][0] + dt / 10 * (1 / 6 * k1 + 1 / 3 * k2 + 1 / 3 * k3 + 1 / 6 * k4)
-                data_temp.push([dx_dt])
-            }
-            data.push(data_temp[data_temp.length - 1])
-            f_arr.push(f(0, data[i]))
-        } else {
-            // predictor - AB3
-            let dx_dt = data[i - 1][0] + dt * (23 / 12 * f_arr[i - 1] - 4 / 3 * f_arr[i - 2]
-                + 5 / 12 * f_arr[i - 3])
-            f_arr.push(f(0, dx_dt))
-            // corrector (optimized)
-            dx_dt = dx_dt + dt * 3 / 8 * (f_arr[i] - 3 * f_arr[i - 1] + 3 * f_arr[i - 2] - f_arr[i - 3])
-            if (dx_dt < 0)
-                dx_dt = NaN
-            data.push([dx_dt])
-        }
     }
     return data
 }
@@ -375,58 +443,8 @@ function solve_real(x0, I, R, a, dt, height) {
     return data
 }
 
-function solve_newton(x0, f, f_dot, tol = 1.0e-9) {
-    let max_iter = 50
-    let x = x0
-    let prev = 0
-    for (let i = 0; i < max_iter; i++) {
-        prev = x
-        x -= f(0, x) / f_dot(0, x)
-        if (Math.abs(x - prev) < tol) {
-            return x
-        }
-        if (isNaN(x)) {
-            return x
-        }
-    }
-    return x
-}
-
-function solve_implicit_euler(x0, I, dt, f, f_dot) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    let exp_dot = function (t1, x1) {
-        return dt * f_dot(t1, x1) - 1
-    }
-    for (let i = 1; i < N; ++i) {
-        let exp = function (t1, x1) {
-            return (data[i - 1][0] + dt * f(t1, x1) - x1)
-        }
-        let dx_dt = solve_newton(data[i - 1][0], exp, exp_dot)
-        data.push([dx_dt])
-    }
-    return data
-}
-
-function solve_implicit_midpoint(x0, I, dt, f, f_dot) {
-    let data = [x0]
-    let N = (I[1] - I[0]) / dt
-    for (let i = 1; i < N; ++i) {
-        let k1 = f(0, data[i - 1][0])
-        let exp = function (t1, x1) {
-            return f(t1, x1 * dt / 2 + data[i - 1][0]) - x1
-        }
-        let exp_dot = function (t1, x1) {
-            return f_dot(t1, x1 * dt / 2 + data[i - 1][0]) - 1
-        }
-        let dx_dt = data[i - 1][0] + dt * solve_newton(k1, exp, exp_dot)
-        data.push([dx_dt])
-    }
-    return data
-}
-
 // Universal ODE solver (any method)
-function ode_diff_water(method = "real", R, a, h, height, update) {
+function ode_solver(method = "real", R, a, h, height, update, f, f_dot) {
     let I1 = [0, 17]
     if (h <= 0) h = 1
     if (a > R) a = R
@@ -436,44 +454,34 @@ function ode_diff_water(method = "real", R, a, h, height, update) {
         h = 0.01
     }
     update(R, a, height)
-
-    // xdot(t)
     let f1 = function (t1, x1) {
-        let g = 9.80665
-        let y1 = []
-        y1[0] = -(a * a) / (R * R) * Math.sqrt(2 * g * x1)
-        return y1
+        return f(t1, x1, [a, R])
     }
-
     let f1_dot = function (t1, x1) {
-        let g = 9.80665
-        let y1 = []
-        y1[0] = -(a * a) / (2 * R * R * Math.sqrt(x1)) * Math.sqrt(2 * g)
-        return y1
+        return f_dot(t1, x1, [a, R])
     }
-
     let x01 = [height]
     let data1 = []
     if (method === "euler") {
-        data1 = solve_euler(x01, I1, h, f1)
+        data1 = solve_one_step(x01, I1, h, f1, euler_step)
     } else if (method === "midpoint") {
-        data1 = solve_midpoint(x01, I1, h, f1)
+        data1 = solve_one_step(x01, I1, h, f1, midpoint_step)
     } else if (method === "ab2") {
-        data1 = solve_adams_bashforth_2(x01, I1, h, f1)
+        data1 = solve_multi_step(x01, I1, h, f1, rk4_step, adams_bashforth_2_step, 2)
     } else if (method === "ab3") {
-        data1 = solve_adams_bashforth_3(x01, I1, h, f1)
+        data1 = solve_multi_step(x01, I1, h, f1, rk4_step, adams_bashforth_3_step, 3)
     } else if (method === "real") {
         data1 = solve_real(x01, I1, R, a, h, height)
     } else if (method === "imp_euler") {
-        data1 = solve_implicit_euler(x01, I1, h, f1, f1_dot)
+        data1 = solve_implicit_one_step(x01, I1, h, f1, f1_dot, euler_implicit_step)
     } else if (method === "imp_midpoint") {
-        data1 = solve_implicit_midpoint(x01, I1, h, f1, f1_dot)
+        data1 = solve_implicit_one_step(x01, I1, h, f1, f1_dot, midpoint_implicit_step)
     } else if (method === "am3") {
-        data1 = solve_adams_moulton_3(x01, I1, h, f1)
+        data1 = solve_multi_step_implicit(x01, I1, h, f1, rk4_step, adams_moulton_3_step, 2)
     } else if (method === "am4") {
-        data1 = solve_adams_moulton_4(x01, I1, h, f1)
+        data1 = solve_multi_step_implicit(x01, I1, h, f1, rk4_step, adams_moulton_4_step, 3)
     } else if (method === "bsh") {
-        data1 = solve_bogacki_shampine(x01, I1, h, f1, 1e-5)
+        data1 = solve_one_step_adaptive(x01, I1, h, f1, 1e-5, bogacki_shampine_step)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -496,8 +504,8 @@ function compute_errors(i) {
 
 // Evaluating methods
 for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "bsh", "imp_euler", "imp_midpoint", "real"]) {
-    graphs[i][4].data = ode_diff_water(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-        parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+    graphs[i][4].data = ode_solver(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+        parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
     if (i !== "real") {
         compute_errors(i)
     }
@@ -519,8 +527,8 @@ for (let elem in graphs) {
     }
     graphs[elem][0] = board.create('curve', [t, data], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
     graphs[elem][0].updateDataArray = function () {
-        graphs[elem][4].data = ode_diff_water(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-            parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+        graphs[elem][4].data = ode_solver(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+            parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
         elem !== "real" && compute_errors(elem)
         this.dataX = []
         this.dataY = []
@@ -538,8 +546,8 @@ for (let elem in graphs) {
     if (elem !== "real") {
         graphs[elem][7] = board.create('curve', [t, err], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
         graphs[elem][7].updateDataArray = function () {
-            graphs[elem][4].data = ode_diff_water(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
-                parseFloat(h_slider.Value()), startZ.Y(), update_parameters)
+            graphs[elem][4].data = ode_solver(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+                parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
             compute_errors(elem)
             this.dataX = []
             this.dataY = []
