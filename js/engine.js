@@ -62,9 +62,12 @@ let graphs = {
     "bsh":[null, null, false, "Метод Богацкого-Шампина", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "est_err":[]
     }, "red", "BSH", null, null],
 }
+
+let iter = 0
 
 // Change XY range
 function update_range() {
@@ -138,8 +141,8 @@ function update_table() {
         }
     }
     let real = 0
-    for (let i = 0; i < graphs.bsh[4].data.length; i++) {
-        if (isNaN(graphs.bsh[4].data[i][0])) break
+    for (let i = 0; i < graphs.midpoint[4].data.length; i++) {
+        if (isNaN(graphs.midpoint[4].data[i][0])) break
         real = f_real(graphs.midpoint[4].data[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y())
         output += "<tr><td>" +
             graphs.euler[4].data[i][1].toFixed(2) + "</td>"
@@ -170,14 +173,24 @@ function update_table() {
 }
 
 // Write to HTML parameters values
-let update_parameters = function (R, a, height) {
-    document.getElementById("R").innerText = R.toString()
-    document.getElementById("a").innerText = a.toString()
+let update_parameters = function (params, height) {
+    document.getElementById("R").innerText = params[1].toString()
+    document.getElementById("a").innerText = params[0].toString()
     document.getElementById("height").innerText = height.toString()
 }
 
 let update_time = function (time) {
     document.getElementById("time").innerText = time.toString()
+}
+
+// Get params
+function get_params() {
+    let a = a_slider.Value()
+    let R = R_slider.Value()
+    if (a > R) a = R
+    if (a <= 0) a = 1
+    if (R <= 0) R = 1
+    return [a, R]
 }
 
 // Glider to move height of container
@@ -189,6 +202,7 @@ startZ = board.createElement('glider', [0, 10, board.defaultAxes.y], {
 
 // f(t)
 let func = function (t1, x1, param) {
+    iter += 1
     let g = 9.80665
     let y1 = []
     y1[0] = -(param[0] * param[0]) / (param[1] * param[1]) * Math.sqrt(2 * g * x1)
@@ -198,6 +212,7 @@ let func = function (t1, x1, param) {
 
 // f_dot(t)
 let func_dot = function (t1, x1, param) {
+    iter += 1
     let g = 9.80665
     let y1 = []
     y1[0] = -(param[0] * param[0]) / (2 * param[1] * param[1] * Math.sqrt(x1)) * Math.sqrt(2 * g)
@@ -205,7 +220,7 @@ let func_dot = function (t1, x1, param) {
 }
 
 
-// ONE STEP METHODS
+// SINGLE STEP METHODS
 
 // Euler method step function
 function euler_step(prev, dt, f) {
@@ -219,18 +234,21 @@ function midpoint_step(prev, dt, f) {
     return [dx_dt]
 }
 
-// One step function (saves data to array)
-function solve_one_step(x0, I, dt, f, f_step) {
-    let data = [x0]
+// Single step function (saves data to array)
+function solve_single_step(data, x0, I, dt, f, f_step) {
+    iter = 0
+    data.push(x0)
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
         data.push(f_step(data[i - 1], dt, f)) // just saving all data to array (can be changed)
     }
+    console.log(f_step.name)
+    console.log(iter)
     return data
 }
 
 
-// ONE STEP IMPLICIT METHODS
+// SINGLE STEP IMPLICIT METHODS
 
 // Newton method
 function solve_newton(x0, f, f_dot, tol = 1.0e-9) {
@@ -274,12 +292,15 @@ function midpoint_implicit_step(prev, dt, f, f_dot) {
 }
 
 // One step implicit function (saves data to array)
-function solve_implicit_one_step(x0, I, dt, f, f_dot, f_step) {
-    let data = [x0]
+function solve_implicit_single_step(data, x0, I, dt, f, f_dot, f_step) {
+    iter = 0
+    data.push(x0)
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
         data.push(f_step(data[i - 1], dt, f, f_dot))
     }
+    console.log(f_step.name)
+    console.log(iter)
     return data
 }
 
@@ -318,8 +339,9 @@ function adams_bashforth_3_step(prev, dt, f) {
 }
 
 // Multi step methods function (saves data to array)
-function solve_multi_step(x0, I, dt, f, one_step, f_step, n) {
-    let data = [x0]
+function solve_multi_step(data, x0, I, dt, f, one_step, f_step, n) {
+    iter = 0
+    data.push(x0)
     let N = (I[1] - I[0]) / dt
     for (let i = 1; i < N; ++i) {
         if (i < n) {
@@ -334,6 +356,8 @@ function solve_multi_step(x0, I, dt, f, one_step, f_step, n) {
             data.push(f_step(data, dt, f)) // You can send only last n values as prev
         }
     }
+    console.log(f_step.name)
+    console.log(iter)
     return data
 }
 
@@ -367,8 +391,9 @@ function adams_moulton_4_step(prev, prev_f, dt, f) {
 }
 
 // Multi step implicit methods function (saves data to array)
-function solve_multi_step_implicit(x0, I, dt, f, one_step, f_step, n) {
-    let data = [x0]
+function solve_multi_step_implicit(data, x0, I, dt, f, one_step, f_step, n) {
+    iter = 0
+    data.push(x0)
     let N = (I[1] - I[0]) / dt
     let f_arr = [f(0, x0)]
     for (let i = 1; i < N; ++i) {
@@ -386,6 +411,8 @@ function solve_multi_step_implicit(x0, I, dt, f, one_step, f_step, n) {
             f_arr.push(res[1])
         }
     }
+    console.log(f_step.name)
+    console.log(iter)
     return data
 }
 
@@ -401,13 +428,16 @@ function bogacki_shampine_step(prev, h, f, tol, x) {
     let k4 = f(0, dx_dt)
     let dx_dt_hat = prev[0] + 7 / 24 * h * k1 + 1 / 4 * h * k2 + 1 / 3 * h * k3 + 1 / 8 * h * k4
     x += h
-    h *= Math.pow(1 / Math.sqrt((dx_dt_hat - dx_dt) / tol), 1 / 4)
-    return [[dx_dt, x], h]
+    let err = dx_dt_hat - dx_dt
+    h *= Math.pow(1 / Math.sqrt(err / tol), 1 / 4)
+    return [[dx_dt_hat, x], h, err]
 }
 
 // One step adaptive methods function (saves data to array)
-function solve_one_step_adaptive(x0, I, dt, f, tol, f_step) {
-    let data = [[x0[0], 0]]
+function solve_single_step_adaptive(data, x0, I, dt, f, tol, f_step) {
+    iter = 0
+    data.push([x0[0], 0])
+    let err = []
     let h = dt
     let x = 0.0
     let i = 1
@@ -417,8 +447,11 @@ function solve_one_step_adaptive(x0, I, dt, f, tol, f_step) {
         x = res[0][1]
         h = res[1]
         i += 1
+        err.push(res[2])
     }
-    return data
+    console.log(f_step.name)
+    console.log(iter)
+    return [data, err]
 }
 
 // Root function x(t)
@@ -431,8 +464,10 @@ let f_real = function (t1, R, a, height) {
 }
 
 // Analytical solution function with step dt (for plot)
-function solve_real(x0, I, R, a, dt, height) {
-    let data = [x0]
+function solve_real(data, x0, I, params, dt, height) {
+    let R = params[1]
+    let a = params[0]
+    data.push(x0)
     let g = 9.80665
     I[1] = Math.pow(R, 2) / Math.pow(a, 2) * Math.sqrt(2 * height / g)
     update_time(I[1])
@@ -444,44 +479,41 @@ function solve_real(x0, I, R, a, dt, height) {
 }
 
 // Universal ODE solver (any method)
-function ode_solver(method = "real", R, a, h, height, update, f, f_dot) {
-    let I1 = [0, 17]
-    if (h <= 0) h = 1
-    if (a > R) a = R
-    if (a <= 0) a = 1
-    if (R <= 0) R = 1
+function ode_solver(method = "real", data1, params, h, height, update, f, f_dot) {
+    let I1 = [0, 37]
+    if (h <= 0) { h = 0.1 }
     if (method === "real") {
         h = 0.01
     }
-    update(R, a, height)
+    update(params, height)
     let f1 = function (t1, x1) {
-        return f(t1, x1, [a, R])
+        return f(t1, x1, params)
     }
     let f1_dot = function (t1, x1) {
-        return f_dot(t1, x1, [a, R])
+        return f_dot(t1, x1, params)
     }
     let x01 = [height]
-    let data1 = []
     if (method === "euler") {
-        data1 = solve_one_step(x01, I1, h, f1, euler_step)
+        solve_single_step(data1, x01, I1, h, f1, euler_step)
     } else if (method === "midpoint") {
-        data1 = solve_one_step(x01, I1, h, f1, midpoint_step)
+        solve_single_step(data1, x01, I1, h, f1, midpoint_step)
     } else if (method === "ab2") {
-        data1 = solve_multi_step(x01, I1, h, f1, rk4_step, adams_bashforth_2_step, 2)
+        solve_multi_step(data1, x01, I1, h, f1, rk4_step, adams_bashforth_2_step, 2)
     } else if (method === "ab3") {
-        data1 = solve_multi_step(x01, I1, h, f1, rk4_step, adams_bashforth_3_step, 3)
+        solve_multi_step(data1, x01, I1, h, f1, rk4_step, adams_bashforth_3_step, 3)
     } else if (method === "real") {
-        data1 = solve_real(x01, I1, R, a, h, height)
+        solve_real(data1, x01, I1, params, h, height)
     } else if (method === "imp_euler") {
-        data1 = solve_implicit_one_step(x01, I1, h, f1, f1_dot, euler_implicit_step)
+        solve_implicit_single_step(data1, x01, I1, h, f1, f1_dot, euler_implicit_step)
     } else if (method === "imp_midpoint") {
-        data1 = solve_implicit_one_step(x01, I1, h, f1, f1_dot, midpoint_implicit_step)
+        solve_implicit_single_step(data1, x01, I1, h, f1, f1_dot, midpoint_implicit_step)
     } else if (method === "am3") {
-        data1 = solve_multi_step_implicit(x01, I1, h, f1, rk4_step, adams_moulton_3_step, 2)
+        solve_multi_step_implicit(data1, x01, I1, h, f1, rk4_step, adams_moulton_3_step, 2)
     } else if (method === "am4") {
-        data1 = solve_multi_step_implicit(x01, I1, h, f1, rk4_step, adams_moulton_4_step, 3)
+        solve_multi_step_implicit(data1, x01, I1, h, f1, rk4_step, adams_moulton_4_step, 3)
     } else if (method === "bsh") {
-        data1 = solve_one_step_adaptive(x01, I1, h, f1, 1e-5, bogacki_shampine_step)
+        let res = solve_single_step_adaptive(data1, x01, I1, h, f1, 1e-5, bogacki_shampine_step)
+        graphs.bsh[4].est_err = res[1]
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -500,11 +532,22 @@ function compute_errors(i) {
         graphs[i][4].err.push(Math.abs(graphs[i][4].data[j][0] - real) / real)
         graphs[i][4].abs_err.push(Math.abs(graphs[i][4].data[j][0] - real))
     }
+    console.log(i)
+    let sum = 0
+    for (let j = 0; j < graphs[i][4].err.length; j++) {
+        if (!isNaN(graphs[i][4].err[j]))
+            sum += graphs[i][4].err[j]
+        else
+            break;
+    }
+    console.log(sum / graphs[i][4].err.length)
 }
 
 // Evaluating methods
 for (let i of ["euler", "midpoint", "ab2", "ab3", "am3", "am4", "bsh", "imp_euler", "imp_midpoint", "real"]) {
-    graphs[i][4].data = ode_solver(i, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+    let params = get_params()
+    let data = []
+    graphs[i][4].data = ode_solver(i, data, params,
         parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
     if (i !== "real") {
         compute_errors(i)
@@ -527,7 +570,9 @@ for (let elem in graphs) {
     }
     graphs[elem][0] = board.create('curve', [t, data], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
     graphs[elem][0].updateDataArray = function () {
-        graphs[elem][4].data = ode_solver(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+        let params = get_params()
+        let data = []
+        graphs[elem][4].data = ode_solver(elem, data, params,
             parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
         elem !== "real" && compute_errors(elem)
         this.dataX = []
@@ -546,7 +591,9 @@ for (let elem in graphs) {
     if (elem !== "real") {
         graphs[elem][7] = board.create('curve', [t, err], {strokeColor:graphs[elem][5], strokeWidth:'3px'})
         graphs[elem][7].updateDataArray = function () {
-            graphs[elem][4].data = ode_solver(elem, parseFloat(R_slider.Value()), parseFloat(a_slider.Value()),
+            let params = get_params()
+            let data = []
+            graphs[elem][4].data = ode_solver(elem, data, params,
                 parseFloat(h_slider.Value()), startZ.Y(), update_parameters, func, func_dot)
             compute_errors(elem)
             this.dataX = []
