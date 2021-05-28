@@ -22,48 +22,57 @@ let graphs = {
     "euler":[null, null, true, "Метод Эйлера", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "red", "EU", null, null],
     "midpoint":[null, null, false, "Метод средней точки", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "green", "MP", null, null],
     "ab2":[null, null, false, "Метод Адамса-Башфорта 2", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "darkorange", "AB2", null, null],
     "ab3":[null, null, false, "Метод Адамса-Башфорта 3", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "hotpink", "AB3", null, null],
     "imp_euler":[null, null, true, "Неявный метод Эйлера", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "saddlebrown", "IEU", null, null],
     "imp_midpoint":[null, null, false, "Неявный метод средней точки", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "darkslateblue", "IMP", null, null],
     "am3":[null, null, false, "Метод Адамса-Мултона 3", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "lime", "AM3", null, null],
     "am4":[null, null, false, "Метод Адамса-Мултона 4", {
         "data":[],
         "abs_err":[],
-        "err":[]
+        "err":[],
+        "loc_err":[]
     }, "black", "AM4", null, null],
     "bsh":[null, null, false, "Метод Богацкого-Шампина", {
         "data":[],
         "abs_err":[],
         "err":[],
-        "est_err":[]
+        "est_err":[],
+        "loc_err":[]
     }, "red", "BSH", null, null],
 }
 
@@ -141,8 +150,8 @@ function update_table() {
         }
     }
     let real = 0
-    for (let i = 0; i < graphs.midpoint[4].data.length; i++) {
-        if (isNaN(graphs.midpoint[4].data[i][0])) break
+    for (let i = 0; i < graphs.bsh[4].data.length; i++) {
+        if (isNaN(graphs.bsh[4].data[i][0])) break
         real = f_real(graphs.midpoint[4].data[i][1], parseFloat(R_slider.Value()), parseFloat(a_slider.Value()), startZ.Y())
         output += "<tr><td>" +
             graphs.euler[4].data[i][1].toFixed(2) + "</td>"
@@ -170,6 +179,8 @@ function update_table() {
     document.getElementById("table").innerHTML = output
     document.getElementById("errors").innerHTML = errors
     document.getElementById("abs-errors").innerHTML = abs_errors
+    console.log("Local error")
+    console.log(graphs.bsh[4].loc_err)
 }
 
 // Write to HTML parameters values
@@ -514,6 +525,8 @@ function ode_solver(method = "real", data1, params, h, height, update, f, f_dot)
     } else if (method === "bsh") {
         let res = solve_single_step_adaptive(data1, x01, I1, h, f1, 1e-5, bogacki_shampine_step)
         graphs.bsh[4].est_err = res[1]
+        console.log("Estimate error")
+        console.log(graphs.bsh[4].est_err)
     }
     let q1 = I1[0]
     for (let i = 0; i < data1.length; i++) {
@@ -526,11 +539,18 @@ function ode_solver(method = "real", data1, params, h, height, update, f, f_dot)
 function compute_errors(i) {
     graphs[i][4].err = []
     graphs[i][4].abs_err = []
+    graphs[i][4].loc_err = []
     for (let j = 0; j < graphs[i][4].data.length; j++) {
         let real = f_real(graphs[i][4].data[j][1], parseFloat(R_slider.Value()),
             parseFloat(a_slider.Value()), startZ.Y())
         graphs[i][4].err.push(Math.abs(graphs[i][4].data[j][0] - real) / real)
         graphs[i][4].abs_err.push(Math.abs(graphs[i][4].data[j][0] - real))
+        if (j > 0) {
+            graphs[i][4].loc_err.push(Math.abs(graphs[i][4].abs_err[j] - graphs[i][4].abs_err[j - 1]))
+        } else {
+            graphs[i][4].loc_err.push(graphs[i][4].abs_err[j])
+        }
+
     }
     console.log(i)
     let sum = 0
